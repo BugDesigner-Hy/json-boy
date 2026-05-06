@@ -1,0 +1,153 @@
+{
+  "company": {
+    "name": "锦绣科技集团",
+    "founded": 2015,
+    "isPublic": false,
+    "headquarters": {
+      "city": "深圳",
+      "province": "广东",
+      "address": {
+        "district": "南山区",
+        "street": "科技园南路88号",
+        "building": "锦绣大厦",
+        "floor": 32,
+        "postalCode": "518057",
+        "coordinates": {
+          "latitude": 22.5431,
+          "longitude": 114.0579,
+          "altitude": null
+        }
+      }
+    },
+    "departments": [
+      {
+        "id": "DEPT-001",
+        "name": "技术研发中心",
+        "headcount": 156,
+        "manager": {
+          "name": "张伟",
+          "age": 38,
+          "email": "zhangwei@jinxiu.tech",
+          "skills": ["Java", "Python", "架构设计", "团队管理"],
+          "certifications": [
+            { "name": "AWS Solutions Architect", "year": 2022, "expired": false },
+            { "name": "PMP", "year": 2020, "expired": true }
+          ]
+        },
+        "teams": [
+          {
+            "name": "后端架构组",
+            "members": [
+              { "name": "李明", "role": "高级工程师", "level": "P7", "active": true },
+              { "name": "王芳", "role": "工程师", "level": "P6", "active": true },
+              { "name": "赵刚", "role": "初级工程师", "level": "P5", "active": false }
+            ]
+          },
+          {
+            "name": "前端体验组",
+            "members": [
+              { "name": "陈静", "role": "高级工程师", "level": "P7", "active": true },
+              { "name": "刘洋", "role": "工程师", "level": "P6", "active": true }
+            ]
+          },
+          {
+            "name": "AI 研究组",
+            "members": [
+              { "name": "周涛", "role": "首席科学家", "level": "P9", "active": true }
+            ],
+            "projects": [
+              {
+                "id": "PRJ-AI-001",
+                "name": "智能客服大模型",
+                "status": "in_progress",
+                "budget": 2500000.00,
+                "milestones": [
+                  { "name": "数据收集", "completed": true, "dueDate": "2025-06-01" },
+                  { "name": "模型训练", "completed": true, "dueDate": "2025-12-01" },
+                  { "name": "灰度发布", "completed": false, "dueDate": "2026-03-01" },
+                  { "name": "全量上线", "completed": false, "dueDate": "2026-06-01" }
+                ],
+                "techStack": {
+                  "framework": "PyTorch",
+                  "model": "LLaMA-3",
+                  "infrastructure": {
+                    "gpu": "A100 x 64",
+                    "storage": "100TB NVMe",
+                    "network": "100Gbps InfiniBand"
+                  }
+                }
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "DEPT-002",
+        "name": "市场营销部",
+        "headcount": 42,
+        "manager": {
+          "name": "孙丽",
+          "age": 35,
+          "email": "sunli@jinxiu.tech",
+          "skills": ["品牌策略", "数字营销", "数据分析"],
+          "certifications": []
+        },
+        "teams": [],
+        "quarterlyTargets": [
+          { "quarter": "Q1", "revenue": 8500000, "achieved": 9200000, "rate": 1.082 },
+          { "quarter": "Q2", "revenue": 9000000, "achieved": 8700000, "rate": 0.967 },
+          { "quarter": "Q3", "revenue": 9500000, "achieved": null, "rate": null },
+          { "quarter": "Q4", "revenue": 10000000, "achieved": null, "rate": null }
+        ]
+      }
+    ],
+    "products": [
+      {
+        "id": "PROD-001",
+        "name": "锦绣云平台",
+        "version": "3.2.1",
+        "isActive": true,
+        "pricing": {
+          "free": { "storage": "5GB", "users": 5, "features": ["基础API", "社区支持"] },
+          "pro": { "storage": "100GB", "users": 50, "price": 299, "features": ["高级API", "优先支持", "数据分析"] },
+          "enterprise": { "storage": "无限", "users": "无限", "price": null, "features": ["定制开发", "专属客服", "SLA保障", "私有化部署"] }
+        },
+        "ratings": [
+          { "user": "user_1001", "score": 5, "comment": "非常稳定", "date": "2026-01-15" },
+          { "user": "user_1002", "score": 4, "comment": "功能强大但学习曲线较陡", "date": "2026-02-20" },
+          { "user": "user_1003", "score": 5, "comment": "客服响应很快", "date": "2026-03-10" }
+        ]
+      },
+      {
+        "id": "PROD-002",
+        "name": "锦绣数据工坊",
+        "version": "1.8.0",
+        "isActive": true,
+        "pricing": {
+          "basic": { "price": 99, "records": 100000 },
+          "standard": { "price": 499, "records": 1000000 },
+          "premium": { "price": 1999, "records": null }
+        },
+        "ratings": []
+      }
+    ],
+    "metadata": {
+      "lastUpdated": "2026-04-30T14:00:00+08:00",
+      "version": "2.1.0",
+      "tags": ["科技", "云计算", "AI", "大数据"],
+      "config": {
+        "theme": "dark",
+        "language": "zh-CN",
+        "notifications": {
+          "email": true,
+          "sms": false,
+          "push": {
+            "enabled": true,
+            "channels": ["app", "wechat", "dingtalk"],
+            "quietHours": { "start": "22:00", "end": "08:00" }
+          }
+        }
+      }
+    }
+  }
+}
