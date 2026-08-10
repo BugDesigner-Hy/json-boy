@@ -5,12 +5,15 @@
       class="node-line"
       :class="{ 'is-highlighted': isSearchMatch, 'is-match': isSearchMatch, 'is-current-match': isCurrentMatch }"
       @click="handleClick"
+      @dblclick="handleDoubleClick"
+      title="双击复制值"
     >
-      <span v-if="isExpandable" class="toggle-icon" :class="{ expanded: isExpanded }">
-        <svg width="12" height="12" viewBox="0 0 12 12">
-          <path d="M4 2 L8 6 L4 10" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-        </svg>
-      </span>
+      <span
+        v-if="isExpandable"
+        class="toggle-icon"
+        :class="{ expanded: isExpanded }"
+        aria-hidden="true"
+      >{{ isExpanded ? '−' : '+' }}</span>
       <span v-else class="toggle-placeholder"></span>
 
       <span v-if="showKey" class="node-key" :class="{ 'array-index': isArrayIndex }">
@@ -25,12 +28,15 @@
         {{ summary }}
       </span>
 
-      <span class="node-type-badge" v-if="isExpandable && showDataType">
-        {{ isArray ? 'Array' : 'Object' }}
-      </span>
-      <span class="node-type-badge node-type-leaf" v-if="!isExpandable && showDataType">
-        {{ leafType }}
-      </span>
+      <AnimalTag
+        v-if="showDataType && typeLabel"
+        class="node-type-tag"
+        size="small"
+        :variant="typeTagVariant"
+        :color="typeTagColor"
+      >
+        {{ typeLabel }}
+      </AnimalTag>
       <span class="node-count" v-if="isExpandable && !isExpanded">
         {{ childCount }} 项
       </span>
@@ -90,6 +96,8 @@
 
 <script setup>
 import { computed, inject, ref, watch, nextTick } from 'vue'
+import AnimalTag from './AnimalTag.vue'
+import { animalNotification } from '../composables/animalNotification.js'
 
 const props = defineProps({
   data: { type: [Object, Array, String, Number, Boolean], default: null },
@@ -102,7 +110,7 @@ const props = defineProps({
   searchType: { type: String, default: 'all' },
   expandState: { type: Object, default: () => ({}) },
   fontSize: { type: Number, default: 14 },
-  fontColor: { type: String, default: '#2b2b2b' },
+  fontColor: { type: String, default: '#725d42' },
   currentMatchPath: { type: String, default: '' },
   coloredDepth: { type: Boolean, default: true },
   showDataType: { type: Boolean, default: true },
@@ -111,6 +119,8 @@ const props = defineProps({
 
 const expandState = inject('expandState')
 const toggleNode = inject('toggleNode')
+const typeTagVariant = inject('typeTagVariant', ref('soft'))
+const typeTagColor = inject('typeTagColor', ref('default'))
 const emit = defineEmits(['nodeClick'])
 const lineRef = ref(null)
 
@@ -170,6 +180,11 @@ const leafType = computed(() => {
   return ''
 })
 
+const typeLabel = computed(() => {
+  if (isExpandable.value) return isArray.value ? 'Array' : 'Object'
+  return leafType.value
+})
+
 const isSearchMatch = computed(() => {
   if (!props.searchQuery || !props.searchQuery.trim()) return false
   const q = props.searchQuery.toLowerCase()
@@ -207,6 +222,34 @@ watch(() => isCurrentMatch.value, (val) => {
   }
 })
 
+function getNodeCopyValue() {
+  if (props.data !== null && typeof props.data === 'object') {
+    return JSON.stringify(props.data)
+  }
+  if (props.data === null) return 'null'
+  if (typeof props.data === 'string') return props.data
+  return String(props.data)
+}
+
+async function handleDoubleClick(event) {
+  event.preventDefault()
+  event.stopPropagation()
+  try {
+    await navigator.clipboard.writeText(getNodeCopyValue())
+    animalNotification.success({
+      message: '已复制到剪贴板',
+      position: 'topRight',
+      duration: 2.5,
+    })
+  } catch {
+    animalNotification.error({
+      message: '复制失败',
+      position: 'topRight',
+      duration: 2.5,
+    })
+  }
+}
+
 function handleClick() {
   emit('nodeClick', { nodePath: props.nodePath, keyName: props.keyName })
   if (!isExpandable.value) return
@@ -228,10 +271,10 @@ function handleClick() {
   align-items: center;
   gap: 4px;
   padding: 2px 6px;
-  border-radius: 4px;
+  border-radius: var(--radius-sm);
   cursor: default;
-  transition: background 0.2s ease;
-  min-height: 26px;
+  transition: var(--transition);
+  min-height: 24px;
   position: relative;
 }
 
@@ -246,12 +289,12 @@ function handleClick() {
 .node-line.is-match {
   background: var(--match-bg);
   border-left: 3px solid var(--match-border);
-  padding-left: 3px;
+  padding-left: 5px;
 }
 
 .node-line.is-current-match {
   background: var(--match-pulse);
-  box-shadow: inset 0 0 0 1px var(--match-border);
+  box-shadow: inset 0 0 0 2px var(--match-border);
 }
 
 .node-line.is-highlighted {
@@ -267,41 +310,46 @@ function handleClick() {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 16px;
-  height: 16px;
+  width: 24px;
+  height: 24px;
   flex-shrink: 0;
-  transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
-  color: var(--text-muted);
-}
-
-.toggle-icon:hover {
-  color: var(--primary);
+  border-radius: 50%;
+  background: var(--primary);
+  box-shadow: 0 2px 4px rgba(25, 200, 185, 0.3);
+  color: #fff;
+  font-size: 16px;
+  font-weight: 700;
+  line-height: 1;
+  transition:
+    background-color 0.25s var(--ease),
+    transform 0.25s var(--ease);
 }
 
 .toggle-icon.expanded {
-  transform: rotate(90deg);
+  background: var(--primary-active);
+  transform: rotate(180deg);
 }
 
 .toggle-placeholder {
-  width: 16px;
-  height: 16px;
+  width: 24px;
+  height: 24px;
   flex-shrink: 0;
 }
 
 .node-key {
   color: var(--node-key);
-  font-weight: 500;
+  font-weight: 600;
   white-space: nowrap;
 }
 
 .node-key.array-index {
   color: var(--node-index);
-  opacity: 0.8;
 }
 
 .node-colon {
   color: var(--node-colon);
   margin-right: 4px;
+  font-weight: 600;
 }
 
 .node-value {
@@ -314,12 +362,12 @@ function handleClick() {
 
 .value-number {
   color: var(--node-number);
-  font-weight: 500;
+  font-weight: 600;
 }
 
 .value-boolean {
   color: var(--node-boolean);
-  font-weight: 500;
+  font-weight: 600;
 }
 
 .value-null {
@@ -332,34 +380,23 @@ function handleClick() {
   font-style: italic;
 }
 
-.node-type-badge {
-  font-size: 10px;
-  padding: 1px 6px;
-  border-radius: 3px;
-  background: var(--node-badge-bg);
-  color: var(--node-badge);
+.node-type-tag {
   margin-left: 6px;
-  font-weight: 500;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-}
-
-.node-type-leaf {
-  opacity: 0.7;
-  font-size: 9px;
+  flex-shrink: 0;
 }
 
 .node-count {
   font-size: 10px;
+  font-weight: 600;
   color: var(--node-count);
   margin-left: 4px;
 }
 
 .node-children {
-  padding-left: 8px;
-  margin-left: 8px;
+  padding-left: 10px;
+  margin-left: 10px;
   overflow: hidden;
-  border-left: 1px dashed var(--tree-border);
+  border-left: 2px dashed var(--tree-border);
 }
 
 .node-children.depth-0,
@@ -370,33 +407,34 @@ function handleClick() {
 .node-children.depth-5,
 .node-children.depth-6,
 .node-children.depth-7 {
-  border-left: 2px solid;
+  border-left-style: solid;
+  border-left-width: 2px;
 }
 
-.node-children.depth-0 { border-left-color: rgba(22, 133, 169, 0.35); }
-.node-children.depth-1 { border-left-color: rgba(140, 67, 86, 0.35); }
-.node-children.depth-2 { border-left-color: rgba(82, 196, 26, 0.35); }
-.node-children.depth-3 { border-left-color: rgba(202, 105, 40, 0.35); }
-.node-children.depth-4 { border-left-color: rgba(74, 66, 102, 0.35); }
-.node-children.depth-5 { border-left-color: rgba(23, 124, 176, 0.35); }
-.node-children.depth-6 { border-left-color: rgba(250, 173, 20, 0.35); }
-.node-children.depth-7 { border-left-color: rgba(194, 54, 22, 0.35); }
+.node-children.depth-0 { border-left-color: rgba(25, 200, 185, 0.45); }
+.node-children.depth-1 { border-left-color: rgba(136, 157, 240, 0.45); }
+.node-children.depth-2 { border-left-color: rgba(111, 186, 44, 0.45); }
+.node-children.depth-3 { border-left-color: rgba(229, 146, 102, 0.45); }
+.node-children.depth-4 { border-left-color: rgba(183, 125, 238, 0.45); }
+.node-children.depth-5 { border-left-color: rgba(247, 205, 103, 0.45); }
+.node-children.depth-6 { border-left-color: rgba(248, 166, 178, 0.45); }
+.node-children.depth-7 { border-left-color: rgba(252, 115, 109, 0.45); }
 
-[data-theme="dark"] .node-children.depth-0 { border-left-color: rgba(121, 192, 255, 0.3); }
-[data-theme="dark"] .node-children.depth-1 { border-left-color: rgba(210, 168, 255, 0.3); }
-[data-theme="dark"] .node-children.depth-2 { border-left-color: rgba(126, 231, 135, 0.3); }
-[data-theme="dark"] .node-children.depth-3 { border-left-color: rgba(255, 166, 87, 0.3); }
-[data-theme="dark"] .node-children.depth-4 { border-left-color: rgba(188, 140, 255, 0.3); }
-[data-theme="dark"] .node-children.depth-5 { border-left-color: rgba(121, 192, 255, 0.3); }
-[data-theme="dark"] .node-children.depth-6 { border-left-color: rgba(255, 211, 61, 0.3); }
-[data-theme="dark"] .node-children.depth-7 { border-left-color: rgba(248, 81, 73, 0.3); }
+[data-theme="dark"] .node-children.depth-0 { border-left-color: rgba(61, 212, 198, 0.35); }
+[data-theme="dark"] .node-children.depth-1 { border-left-color: rgba(136, 157, 240, 0.35); }
+[data-theme="dark"] .node-children.depth-2 { border-left-color: rgba(138, 198, 138, 0.35); }
+[data-theme="dark"] .node-children.depth-3 { border-left-color: rgba(229, 146, 102, 0.35); }
+[data-theme="dark"] .node-children.depth-4 { border-left-color: rgba(183, 125, 238, 0.35); }
+[data-theme="dark"] .node-children.depth-5 { border-left-color: rgba(245, 195, 28, 0.35); }
+[data-theme="dark"] .node-children.depth-6 { border-left-color: rgba(248, 166, 178, 0.35); }
+[data-theme="dark"] .node-children.depth-7 { border-left-color: rgba(252, 115, 109, 0.35); }
 
 .expand-enter-active {
-  animation: expandIn 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  animation: expandIn 0.3s var(--ease);
 }
 
 .expand-leave-active {
-  animation: expandOut 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  animation: expandOut 0.2s var(--ease);
 }
 
 @keyframes expandIn {

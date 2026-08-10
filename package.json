@@ -5,8 +5,8 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "vite build",
-    "build:ext": "node scripts/generate-icons.mjs && vite build",
+    "build": "node scripts/generate-icons.mjs && vite build",
+    "build:ext": "npm run build",
     "preview": "vite preview"
   },
   "dependencies": {

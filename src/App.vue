@@ -1,13 +1,20 @@
 <template>
-  <div class="app" :data-theme="isDark ? 'dark' : 'light'" @click="showSettings = false">
+  <div class="app animal-cursor" :data-theme="isDark ? 'dark' : 'light'" @click="showSettings = false">
     <header class="app-header">
       <div class="header-left">
         <h1 class="logo">
-          <span class="logo-icon">{}</span>
-          <span class="logo-text">JSON Boy</span>
+          <AnimalTitle
+            :color="logoColor"
+            clickable
+            aria-label="点击切换 JSON Boy 标题配色"
+            @click.stop="cycleLogoColor"
+          >
+            <AnimalIcon class="logo-icon" :src="logoIcon" :size="22" bounce label="JSON Boy" />
+            <span class="logo-text">JSON Boy</span>
+          </AnimalTitle>
         </h1>
-        <span class="header-subtitle">JSON 解析 · 代码生成</span>
       </div>
+      <AnimalTime type="game" compact class="header-time" />
       <div class="header-right">
         <div class="font-controls">
           <label class="control-label">字号</label>
@@ -20,42 +27,44 @@
           </button>
           <div class="divider"></div>
           <label class="control-label">颜色</label>
-          <div class="color-palette">
-            <button
-              v-for="color in filteredColors"
-              :key="color.name"
-              class="color-dot"
-              :class="{ active: fontColor === color.value }"
-              :style="{ background: color.value }"
-              :title="color.name"
-              @click="fontColor = color.value"
-            ></button>
-          </div>
+          <AnimalRadio
+            v-model="fontColor"
+            size="small"
+            direction="horizontal"
+            class="color-radio-group"
+            :options="colorRadioOptions"
+          />
           <div class="divider"></div>
-          <button class="btn-icon theme-toggle" @click="toggleDark" :title="isDark ? '切换亮色' : '切换暗色'">
-            <span v-if="isDark">☀</span>
-            <span v-else>☾</span>
-          </button>
+          <label class="theme-switch-wrap">
+            <span class="control-label">{{ isDark ? '暗色' : '亮色' }}</span>
+            <AnimalSwitch
+              v-model="isDark"
+              size="small"
+              :aria-label="isDark ? '切换为亮色模式' : '切换为暗色模式'"
+            />
+          </label>
           <div class="divider"></div>
           <div class="settings-wrapper">
             <button class="btn-icon" @click.stop="showSettings = !showSettings" title="设置">
-              <span>⚙</span>
+              <AnimalIcon :src="settingsIcon" :size="24" bounce label="设置" />
             </button>
           </div>
         </div>
       </div>
     </header>
 
+    <AnimalDivider :type="dividerType" class="app-divider" />
+
     <main class="app-main">
       <div class="panel left-panel" :style="{ flex: `0 0 ${leftPanelWidth}%` }">
-        <div class="panel-header">
+        <div ref="leftPanelHeaderRef" class="panel-header">
           <h2 class="panel-title">
-            <span class="panel-icon">📝</span>
+            <AnimalIcon class="panel-icon" :src="jsonInputIcon" :size="18" label="JSON 输入" />
             JSON 输入
           </h2>
           <div class="panel-actions">
             <button class="btn btn-copy" @click="copyInput" :disabled="!jsonInput.trim()">
-              📋 复制
+              复制
             </button>
             <button class="btn btn-primary" @click="formatJson" :disabled="!jsonInput.trim()">
               格式化
@@ -81,11 +90,7 @@
             @input="onInputChange"
             spellcheck="false"
           ></textarea>
-        </div>
-        <div class="panel-footer" v-if="validationMessage">
-          <div class="validation-msg" :class="validationClass">
-            {{ validationMessage }}
-          </div>
+          <AnimalWallet :value="jsonCharCount" size="small" class="input-wallet" />
         </div>
       </div>
 
@@ -97,22 +102,47 @@
       </div>
 
       <div class="panel right-panel">
-        <div class="panel-header">
+        <div ref="rightPanelHeaderRef" class="panel-header">
           <h2 class="panel-title">
-            <span class="panel-icon">🌳</span>
+            <AnimalIcon class="panel-icon" :src="jsonStructureIcon" :size="18" label="JSON 结构" />
             JSON 结构
           </h2>
           <div class="panel-actions">
-            <div class="search-box">
-              <span class="search-icon">🔍</span>
-              <input
+            <AnimalTooltip
+              :title="isTreeFullyExpanded ? '全部折叠' : '全部展开'"
+              placement="bottom"
+            >
+              <span class="btn-tree-toggle-wrap">
+                <button
+                  class="btn-tree-toggle"
+                  :disabled="!parsedJson"
+                  @click="toggleTreeExpand"
+                >
+                  <AnimalIcon
+                    class="tree-toggle-icon"
+                    :src="expandToggleIcon"
+                    :size="22"
+                    bounce
+                    :label="isTreeFullyExpanded ? '全部折叠' : '全部展开'"
+                  />
+                </button>
+              </span>
+            </AnimalTooltip>
+            <div class="search-row">
+              <AnimalInput
                 v-model="searchQuery"
-                class="search-input"
-                :class="{ 'has-match': matchCount > 0 }"
+                class="search-animal-input"
+                size="small"
                 placeholder="搜索节点或内容..."
+                allow-clear
                 @input="onSearchInput"
+                @clear="onSearchInput"
                 @keydown.enter="goToNextMatch"
-              />
+              >
+                <template #prefix>
+                  <AnimalIcon class="search-icon" name="icon-map" :size="16" label="搜索" />
+                </template>
+              </AnimalInput>
               <span v-if="matchCount > 0" class="match-counter">
                 {{ currentMatchIndex + 1 }}/{{ matchCount }}
               </span>
@@ -121,29 +151,32 @@
                 class="btn-nav"
                 @click="goToPrevMatch"
                 title="上一个"
-              >▲</button>
+              >
+                <AnimalIcon class="nav-icon nav-icon-up" name="icon-helicopter" :size="14" label="上一个" />
+              </button>
               <button
                 v-if="matchCount > 0"
                 class="btn-nav"
                 @click="goToNextMatch"
                 title="下一个"
-              >▼</button>
+              >
+                <AnimalIcon class="nav-icon nav-icon-down" name="icon-helicopter" :size="14" label="下一个" />
+              </button>
             </div>
-            <select v-model="searchType" class="search-type-select" @change="onSearchInput">
-              <option value="key">按节点名</option>
-              <option value="value">按内容</option>
-              <option value="all">全部</option>
-            </select>
-            <button class="btn btn-outline" @click="expandAll">全部展开</button>
-            <button class="btn btn-outline" @click="collapseAll">全部折叠</button>
-            <button class="btn btn-java" @click="showJavaModal = true" :disabled="!parsedJson">
-              ☕ 生成代码
-            </button>
+            <AnimalSelect
+              v-model="searchType"
+              class="search-type-select"
+              placement="top"
+              :min-width="120"
+              aria-label="搜索类型"
+              :options="searchTypeOptions"
+              @change="onSearchInput"
+            />
           </div>
         </div>
         <div class="tree-area" ref="treeAreaRef">
           <div v-if="!parsedJson" class="empty-state">
-            <div class="empty-icon">{ }</div>
+            <AnimalIcon class="empty-icon" name="icon-design" :size="88" bounce label="空状态" />
             <p>在左侧输入 JSON 字符串，解析结果将在此展示</p>
           </div>
           <div v-else class="tree-scroll" :style="{ fontSize: fontSize + 'px', color: fontColor }">
@@ -166,107 +199,194 @@
             />
           </div>
         </div>
-        <button
+        <BackTop
           v-if="parsedJson"
-          class="btn-back-root"
-          @click="scrollToRoot"
-          title="回到根节点"
-        >⬆ root</button>
+          :target="getTreeAreaEl"
+          :visibility-height="200"
+        />
       </div>
     </main>
 
-    <transition name="modal-fade">
-      <div v-if="showJavaModal" class="modal-overlay" @click.self="showJavaModal = false">
-        <div class="modal">
-          <div class="modal-header">
-            <h3>☕ 生成代码</h3>
-            <button class="btn-close" @click="showJavaModal = false">×</button>
+    <AnimalFooter v-if="showFooter" :type="footerType" seamless />
+
+    <AnimalDrawer v-model:open="showSettings" :width="378">
+      <template #title>
+        <AnimalIcon :src="settingsIcon" :size="28" label="设置" />
+        设置
+      </template>
+      <div class="drawer-section">
+        <div class="drawer-section-title">树形视图</div>
+        <label class="drawer-item">
+          <input type="checkbox" v-model="coloredDepth" />
+          <span>层级彩色虚线</span>
+        </label>
+        <label class="drawer-item">
+          <input type="checkbox" v-model="showDataType" />
+          <span>显示数据类型</span>
+        </label>
+        <div v-if="showDataType" class="drawer-tag-settings">
+          <div class="drawer-tag-preview">
+            <span class="drawer-footer-type-label">标签预览</span>
+            <AnimalTag size="small" :variant="typeTagVariant" :color="typeTagColor">
+              Array
+            </AnimalTag>
           </div>
-          <div class="modal-toolbar">
-            <select v-model="codeLang" class="lang-select">
-              <option value="java">Java</option>
-              <option value="typescript">TypeScript</option>
-              <option value="javascript">JavaScript</option>
-              <option value="python">Python</option>
-              <option value="go">Go</option>
-              <option value="csharp">C#</option>
-            </select>
-            <input
-              v-model="codeClassName"
-              class="class-name-input"
-              :placeholder="classNamePlaceholder"
+          <div class="drawer-tag-row">
+            <span class="drawer-footer-type-label">标签样式</span>
+            <AnimalSelect
+              v-model="typeTagVariant"
+              class="drawer-tag-select"
+              placement="top"
+              :min-width="168"
+              aria-label="类型标签样式"
+              :options="tagVariantOptions"
             />
-            <button class="btn btn-primary" @click="generateCode">生成</button>
-            <button class="btn btn-success" @click="copyCode">📋 复制</button>
-            <button class="btn btn-warning" @click="exportCode">💾 导出</button>
           </div>
-          <div class="modal-body">
-            <pre class="java-code" v-if="generatedCode"><code>{{ generatedCode }}</code></pre>
-            <div v-else class="empty-java">
-              <p>{{ codeLang === 'java' ? '输入类名' : '输入名称' }}后点击"生成"按钮</p>
+          <div class="drawer-tag-row">
+            <span class="drawer-footer-type-label">标签颜色</span>
+            <AnimalSelect
+              v-model="typeTagColor"
+              class="drawer-tag-select"
+              placement="top"
+              :min-width="168"
+              aria-label="类型标签颜色"
+              :options="tagColorOptions"
+            />
+          </div>
+        </div>
+        <label class="drawer-item">
+          <input type="checkbox" v-model="showArrayIndex" />
+          <span>显示数组角标</span>
+        </label>
+      </div>
+      <div class="drawer-section">
+        <div class="drawer-section-title">界面</div>
+        <label class="drawer-item">
+          <input type="checkbox" v-model="showHomeBear" />
+          <span>显示小棕熊</span>
+        </label>
+        <label class="drawer-item">
+          <input type="checkbox" v-model="showFooter" />
+          <span>显示页脚装饰</span>
+        </label>
+        <div v-if="showFooter" class="drawer-footer-type">
+          <span class="drawer-footer-type-label">页脚类型</span>
+          <AnimalRadio
+            v-model="footerType"
+            size="small"
+            direction="horizontal"
+            class="footer-type-radio"
+            :options="footerTypeOptions"
+          />
+        </div>
+        <div class="drawer-divider-type">
+          <div class="drawer-divider-preview">
+            <span class="drawer-footer-type-label">分割线预览</span>
+            <div class="drawer-divider-sample-wrap">
+              <AnimalDivider :type="dividerType" class="drawer-divider-sample" />
             </div>
           </div>
-        </div>
-      </div>
-    </transition>
-
-    <transition name="fade">
-      <div v-if="toast.show" class="toast" :class="toast.type">
-        {{ toast.message }}
-      </div>
-    </transition>
-
-    <transition name="drawer-overlay">
-      <div v-if="showSettings" class="drawer-overlay" @click="showSettings = false"></div>
-    </transition>
-    <transition name="drawer-slide">
-      <div v-if="showSettings" class="settings-drawer" @click.stop>
-        <div class="drawer-header">
-          <h3>⚙ 设置</h3>
-          <button class="btn-close" @click="showSettings = false">×</button>
-        </div>
-        <div class="drawer-body">
-          <div class="drawer-section">
-            <div class="drawer-section-title">树形视图</div>
-            <label class="drawer-item">
-              <input type="checkbox" v-model="coloredDepth" />
-              <span>层级彩色虚线</span>
-            </label>
-            <label class="drawer-item">
-              <input type="checkbox" v-model="showDataType" />
-              <span>显示数据类型</span>
-            </label>
-            <label class="drawer-item">
-              <input type="checkbox" v-model="showArrayIndex" />
-              <span>显示数组角标</span>
-            </label>
+          <div class="drawer-divider-row">
+            <span class="drawer-footer-type-label">分割线样式</span>
+            <AnimalSelect
+              v-model="dividerType"
+              class="divider-type-select"
+              placement="top"
+              :min-width="168"
+              aria-label="分割线样式"
+              :options="dividerTypeOptions"
+            />
           </div>
         </div>
       </div>
-    </transition>
+    </AnimalDrawer>
+
+    <HomeBearLogo v-if="showHomeBear" :src="homeBearLogoUrl" />
+
+    <AnimalNotificationHost />
   </div>
 </template>
 
 <script setup>
 import { ref, reactive, computed, provide, nextTick, watch, onMounted, onUnmounted } from 'vue'
 import JsonTreeNode from './components/JsonTreeNode.vue'
+import BackTop from './components/BackTop.vue'
+import AnimalIcon from './components/AnimalIcon.vue'
+import AnimalSelect from './components/AnimalSelect.vue'
+import AnimalRadio from './components/AnimalRadio.vue'
+import AnimalNotificationHost from './components/AnimalNotificationHost.vue'
+import AnimalDrawer from './components/AnimalDrawer.vue'
+import AnimalTime from './components/AnimalTime.vue'
+import AnimalWallet from './components/AnimalWallet.vue'
+import AnimalFooter from './components/AnimalFooter.vue'
+import AnimalDivider from './components/AnimalDivider.vue'
+import AnimalInput from './components/AnimalInput.vue'
+import AnimalSwitch from './components/AnimalSwitch.vue'
+import AnimalTag from './components/AnimalTag.vue'
+import AnimalTooltip from './components/AnimalTooltip.vue'
+import AnimalTitle from './components/AnimalTitle.vue'
+import HomeBearLogo from './components/HomeBearLogo.vue'
+import { animalNotification } from './composables/animalNotification.js'
+import { itemIconUrl, DIVIDER_TYPE_OPTIONS, ANIMAL_HOME_BEAR_LOGO } from './assets/animal-icons.js'
+import { TAG_VARIANT_OPTIONS, TAG_COLOR_OPTIONS } from './assets/tag-options.js'
+import { TITLE_COLOR_KEYS, LOGO_ICON_START, LOGO_ICON_COUNT } from './assets/title-options.js'
+
+const expandToggleIcon = itemIconUrl(1)
+const jsonInputIcon = itemIconUrl(23)
+const jsonStructureIcon = itemIconUrl(473)
+const settingsIcon = itemIconUrl(469)
+const homeBearLogoUrl = ANIMAL_HOME_BEAR_LOGO
+const SHOW_HOME_BEAR_KEY = 'json-boy-show-home-bear'
+const LOGO_THEME_STORAGE_KEY = 'json-boy-title-theme'
+
+function getInitialShowHomeBear() {
+  try {
+    const saved = localStorage.getItem(SHOW_HOME_BEAR_KEY)
+    if (saved === 'false') return false
+    return true
+  } catch {
+    return true
+  }
+}
+
+function getInitialLogoThemeIndex() {
+  try {
+    const saved = localStorage.getItem(LOGO_THEME_STORAGE_KEY)
+    if (saved == null) {
+      const legacy = localStorage.getItem('json-boy-title-color')
+      if (legacy != null) {
+        const colorIndex = TITLE_COLOR_KEYS.indexOf(legacy)
+        if (colorIndex >= 0) return colorIndex
+      }
+      return 0
+    }
+    const num = Number(saved)
+    if (!Number.isNaN(num) && num >= 0) return num
+    const colorIndex = TITLE_COLOR_KEYS.indexOf(saved)
+    return colorIndex >= 0 ? colorIndex : 0
+  } catch {
+    return 0
+  }
+}
+
+const logoThemeIndex = ref(getInitialLogoThemeIndex())
+const logoColor = computed(() => TITLE_COLOR_KEYS[logoThemeIndex.value % TITLE_COLOR_KEYS.length])
+const logoIcon = computed(() =>
+  itemIconUrl(LOGO_ICON_START + (logoThemeIndex.value % LOGO_ICON_COUNT))
+)
 
 const jsonInput = ref('')
 const parsedJson = ref(null)
 const searchQuery = ref('')
 const searchType = ref('all')
-const fontSize = ref(14)
-const fontColor = ref('#2b2b2b')
+const fontSize = ref(13)
+const fontColor = ref('#725d42')
 const isDark = ref(false)
-const showJavaModal = ref(false)
-const codeLang = ref('java')
-const codeClassName = ref('RootBean')
-const generatedCode = ref('')
-const validationMessage = ref('')
-const validationClass = ref('')
 const expandState = reactive({})
 const textareaRef = ref(null)
 const treeAreaRef = ref(null)
+const leftPanelHeaderRef = ref(null)
+const rightPanelHeaderRef = ref(null)
 const treeKey = ref(0)
 const matchPaths = ref([])
 const currentMatchIndex = ref(-1)
@@ -277,50 +397,57 @@ const showSettings = ref(false)
 const coloredDepth = ref(true)
 const showDataType = ref(true)
 const showArrayIndex = ref(true)
+const typeTagVariant = ref('soft')
+const typeTagColor = ref('default')
+const showFooter = ref(true)
+const showHomeBear = ref(getInitialShowHomeBear())
+const footerType = ref('tree')
+const dividerType = ref('line-brown')
 
-const toast = reactive({
-  show: false,
-  message: '',
-  type: 'info'
-})
+const dividerTypeOptions = DIVIDER_TYPE_OPTIONS
+const tagVariantOptions = TAG_VARIANT_OPTIONS
+const tagColorOptions = TAG_COLOR_OPTIONS
+const isTreeFullyExpanded = ref(true)
+
+provide('typeTagVariant', typeTagVariant)
+provide('typeTagColor', typeTagColor)
 
 const chineseColors = [
-  { name: '墨黑', value: '#2b2b2b' },
-  { name: '朱砂', value: '#c23616' },
-  { name: '胭脂', value: '#9d2933' },
-  { name: '石青', value: '#1685a9' },
-  { name: '绛紫', value: '#8c4356' },
-  { name: '琥珀', value: '#b85c28' },
-  { name: '黛色', value: '#4a4266' },
-  { name: '靛蓝', value: '#177cb0' },
-  { name: '月白', value: '#ffffff' },
+  { name: '暖棕', value: '#725d42' },
+  { name: '米白', value: '#f8f8f0' },
+  { name: '天蓝', value: '#889df0' },
+  { name: '草绿', value: '#6fba2c' },
 ]
+
+const searchTypeOptions = [
+  { key: 'key', label: '按节点名' },
+  { key: 'value', label: '按内容' },
+  { key: 'all', label: '全部' },
+]
+
+const footerTypeOptions = [
+  { value: 'sea', label: '海' },
+  { value: 'tree', label: '树' },
+]
+
+const colorRadioOptions = computed(() =>
+  filteredColors.value.map((c) => ({
+    value: c.value,
+    label: c.name,
+    swatch: c.value,
+  }))
+)
 
 const filteredColors = computed(() => {
   if (isDark.value) {
-    return chineseColors.filter(c => c.value !== '#2b2b2b')
+    return chineseColors.filter(c => c.value !== '#725d42')
   }
-  return chineseColors.filter(c => c.value !== '#ffffff')
+  return chineseColors.filter(c => c.value !== '#f8f8f0')
 })
 
 const matchCount = computed(() => matchPaths.value.length)
 
-const classNamePlaceholder = computed(() => {
-  const map = {
-    java: '输入类名 (如: MyClass)',
-    typescript: '输入接口名 (如: MyInterface)',
-    javascript: '输入类名 (如: MyClass)',
-    python: '输入类名 (如: MyClass)',
-    go: '输入结构体名 (如: MyStruct)',
-    csharp: '输入类名 (如: MyClass)',
-  }
-  return map[codeLang.value] || '输入名称'
-})
-
-const codeFileExt = computed(() => {
-  const map = { java: '.java', typescript: '.ts', javascript: '.js', python: '.py', go: '.go', csharp: '.cs' }
-  return map[codeLang.value] || '.txt'
-})
+const jsonCharCount = computed(() => jsonInput.value.length)
 
 const rootKeyName = computed(() => {
   if (!parsedJson.value) return ''
@@ -328,17 +455,27 @@ const rootKeyName = computed(() => {
   return 'root'
 })
 
-function toggleDark() {
-  isDark.value = !isDark.value
-  if (isDark.value) {
-    if (fontColor.value === '#ffffff' || fontColor.value === '#2b2b2b') {
-      fontColor.value = '#ffffff'
+watch(isDark, (dark) => {
+  if (dark) {
+    if (fontColor.value === '#f8f8f0' || fontColor.value === '#725d42') {
+      fontColor.value = '#f8f8f0'
     }
-  } else {
-    if (fontColor.value === '#ffffff' || fontColor.value === '#2b2b2b') {
-      fontColor.value = '#2b2b2b'
-    }
+  } else if (fontColor.value === '#f8f8f0' || fontColor.value === '#725d42') {
+    fontColor.value = '#725d42'
   }
+})
+
+watch(showHomeBear, (visible) => {
+  try {
+    localStorage.setItem(SHOW_HOME_BEAR_KEY, String(visible))
+  } catch {
+    // ignore storage errors
+  }
+})
+
+function cycleLogoColor() {
+  logoThemeIndex.value += 1
+  localStorage.setItem(LOGO_THEME_STORAGE_KEY, String(logoThemeIndex.value))
 }
 
 function onResizerMouseDown(e) {
@@ -346,7 +483,7 @@ function onResizerMouseDown(e) {
   isResizing.value = true
   document.addEventListener('mousemove', onResizerMouseMove)
   document.addEventListener('mouseup', onResizerMouseUp)
-  document.body.style.cursor = 'col-resize'
+  document.body.classList.add('animal-cursor-resizing')
   document.body.style.userSelect = 'none'
 }
 
@@ -364,22 +501,78 @@ function onResizerMouseUp() {
   isResizing.value = false
   document.removeEventListener('mousemove', onResizerMouseMove)
   document.removeEventListener('mouseup', onResizerMouseUp)
-  document.body.style.cursor = ''
+  document.body.classList.remove('animal-cursor-resizing')
   document.body.style.userSelect = ''
+  nextTick(syncPanelHeaders)
 }
 
 onUnmounted(() => {
   document.removeEventListener('mousemove', onResizerMouseMove)
   document.removeEventListener('mouseup', onResizerMouseUp)
+  document.body.classList.remove('animal-cursor-resizing')
+  document.body.style.userSelect = ''
+  panelHeaderResizeObserver?.disconnect()
+  window.removeEventListener('resize', syncPanelHeaders)
+})
+
+let panelHeaderResizeObserver = null
+
+function syncPanelHeaders() {
+  const left = leftPanelHeaderRef.value
+  const right = rightPanelHeaderRef.value
+  if (!left || !right) return
+
+  const leftTitle = left.querySelector('.panel-title')
+  const rightTitle = right.querySelector('.panel-title')
+
+  left.style.height = ''
+  right.style.height = ''
+  if (leftTitle) leftTitle.style.width = ''
+  if (rightTitle) rightTitle.style.width = ''
+
+  const titleWidth = Math.max(leftTitle?.offsetWidth ?? 0, rightTitle?.offsetWidth ?? 0)
+  const headerHeight = Math.max(left.offsetHeight, right.offsetHeight)
+
+  if (titleWidth > 0) {
+    const titleWidthPx = `${titleWidth}px`
+    if (leftTitle) leftTitle.style.width = titleWidthPx
+    if (rightTitle) rightTitle.style.width = titleWidthPx
+  }
+
+  const headerHeightPx = `${headerHeight}px`
+  if (left.style.height !== headerHeightPx) left.style.height = headerHeightPx
+  if (right.style.height !== headerHeightPx) right.style.height = headerHeightPx
+}
+
+onMounted(() => {
+  nextTick(() => {
+    syncPanelHeaders()
+    if (typeof ResizeObserver !== 'undefined') {
+      panelHeaderResizeObserver = new ResizeObserver(() => {
+        syncPanelHeaders()
+      })
+      if (leftPanelHeaderRef.value) {
+        panelHeaderResizeObserver.observe(leftPanelHeaderRef.value)
+      }
+      if (rightPanelHeaderRef.value) {
+        panelHeaderResizeObserver.observe(rightPanelHeaderRef.value)
+      }
+    }
+    window.addEventListener('resize', syncPanelHeaders)
+  })
+})
+
+watch(leftPanelWidth, () => {
+  nextTick(syncPanelHeaders)
+})
+
+watch([searchQuery, matchCount, parsedJson], () => {
+  nextTick(syncPanelHeaders)
 })
 
 function showToast(message, type = 'info') {
-  toast.show = true
-  toast.message = message
-  toast.type = type
-  setTimeout(() => {
-    toast.show = false
-  }, 2500)
+  const fn = animalNotification[type] ?? animalNotification.info
+  fn({ message, position: 'topRight', duration: 2.5 })
 }
 
 function clearExpandState() {
@@ -441,23 +634,19 @@ function findChangedPath(oldVal, newVal, prefix = 'root') {
 function parseJson() {
   if (!jsonInput.value.trim()) {
     parsedJson.value = null
-    validationMessage.value = ''
     return
   }
   try {
     parsedJson.value = JSON.parse(jsonInput.value)
-    validationMessage.value = ''
     treeKey.value++
   } catch (e) {
     parsedJson.value = null
-    validationMessage.value = ''
   }
 }
 
 function validateJson() {
   if (!jsonInput.value.trim()) {
-    validationMessage.value = '请输入 JSON 字符串'
-    validationClass.value = 'warning'
+    showToast('请输入 JSON 字符串', 'warning')
     return
   }
   try {
@@ -465,13 +654,9 @@ function validateJson() {
     parsedJson.value = parsed
     treeKey.value++
     prevJsonSnapshot = JSON.parse(JSON.stringify(parsed))
-    validationMessage.value = '✅ JSON 格式正确'
-    validationClass.value = 'success'
     showToast('JSON 格式校验通过', 'success')
   } catch (e) {
-    validationMessage.value = `❌ JSON 格式错误: ${e.message}`
-    validationClass.value = 'error'
-    showToast('JSON 格式校验失败', 'error')
+    showToast(`JSON 格式错误: ${e.message}`, 'error')
   }
 }
 
@@ -502,7 +687,6 @@ function minifyJson() {
 function clearInput() {
   jsonInput.value = ''
   parsedJson.value = null
-  validationMessage.value = ''
   prevJsonSnapshot = null
   clearExpandState()
   resetSearch()
@@ -517,11 +701,8 @@ function copyInput() {
   })
 }
 
-function scrollToRoot() {
-  const treeEl = treeAreaRef.value
-  if (treeEl) {
-    treeEl.scrollTo({ top: 0, behavior: 'smooth' })
-  }
+function getTreeAreaEl() {
+  return treeAreaRef.value
 }
 
 let highlightTimer = null
@@ -605,12 +786,23 @@ function expandAll() {
   if (!parsedJson.value) return
   const paths = collectPaths(parsedJson.value)
   paths.forEach(p => { expandState[p] = true })
+  isTreeFullyExpanded.value = true
 }
 
 function collapseAll() {
   if (!parsedJson.value) return
   const paths = collectPaths(parsedJson.value)
   paths.forEach(p => { expandState[p] = false })
+  isTreeFullyExpanded.value = false
+}
+
+function toggleTreeExpand() {
+  if (!parsedJson.value) return
+  if (isTreeFullyExpanded.value) {
+    collapseAll()
+  } else {
+    expandAll()
+  }
 }
 
 function toggleNode(path) {
@@ -721,372 +913,6 @@ function goToPrevMatch() {
   scrollToTextareaMatch(entry)
 }
 
-function capitalize(str) {
-  if (!str) return ''
-  return str.charAt(0).toUpperCase() + str.slice(1)
-}
-
-function toCamelCase(str) {
-  return str.replace(/[_-]([a-z])/g, (_, c) => c.toUpperCase())
-}
-
-function toPascalCase(str) {
-  const camel = toCamelCase(str)
-  return capitalize(camel)
-}
-
-function inferJavaType(value) {
-  if (value === null) return 'Object'
-  if (typeof value === 'boolean') return 'Boolean'
-  if (typeof value === 'number') {
-    return Number.isInteger(value) ? 'Integer' : 'Double'
-  }
-  if (typeof value === 'string') return 'String'
-  if (Array.isArray(value)) {
-    if (value.length === 0) return 'List<Object>'
-    const itemType = inferJavaType(value[0])
-    return `List<${itemType}>`
-  }
-  return null
-}
-
-function generateJavaClass(json, className, isInner = false) {
-  const lines = []
-  if (!isInner) {
-    lines.push('import lombok.Data;')
-    lines.push('import java.util.List;')
-    lines.push('import com.fasterxml.jackson.annotation.JsonProperty;')
-    lines.push('')
-    lines.push('@Data')
-  } else {
-    lines.push('@Data')
-  }
-  lines.push(`public class ${className} {`)
-
-  const entries = Object.entries(json)
-  const innerClasses = []
-
-  for (const [key, value] of entries) {
-    const fieldName = toCamelCase(key)
-    let javaType
-
-    if (value !== null && typeof value === 'object' && !Array.isArray(value)) {
-      const innerClassName = toPascalCase(key)
-      javaType = innerClassName
-      innerClasses.push({ name: innerClassName, data: value })
-    } else if (Array.isArray(value) && value.length > 0 && typeof value[0] === 'object' && value[0] !== null) {
-      const innerClassName = toPascalCase(key.replace(/s$/, ''))
-      javaType = `List<${innerClassName}>`
-      innerClasses.push({ name: innerClassName, data: value[0] })
-    } else {
-      javaType = inferJavaType(value)
-    }
-
-    lines.push('')
-    if (fieldName !== key) {
-      lines.push(`    @JsonProperty("${key}")`)
-    }
-    lines.push(`    private ${javaType} ${fieldName};`)
-  }
-
-  lines.push('')
-  lines.push('}')
-
-  let result = lines.join('\n')
-
-  for (const inner of innerClasses) {
-    result += '\n\n' + generateJavaClass(inner.data, inner.name, true)
-  }
-
-  return result
-}
-
-function inferTSType(value) {
-  if (value === null) return 'any'
-  if (typeof value === 'boolean') return 'boolean'
-  if (typeof value === 'number') return 'number'
-  if (typeof value === 'string') return 'string'
-  if (Array.isArray(value)) {
-    if (value.length === 0) return 'any[]'
-    return `${inferTSType(value[0])}[]`
-  }
-  return null
-}
-
-function generateTSInterface(json, name, isInner = false) {
-  const lines = []
-  lines.push(`export interface ${name} {`)
-
-  const entries = Object.entries(json)
-  const innerTypes = []
-
-  for (const [key, value] of entries) {
-    let tsType
-    if (value !== null && typeof value === 'object' && !Array.isArray(value)) {
-      const innerName = toPascalCase(key)
-      tsType = innerName
-      innerTypes.push({ name: innerName, data: value })
-    } else if (Array.isArray(value) && value.length > 0 && typeof value[0] === 'object' && value[0] !== null) {
-      const innerName = toPascalCase(key.replace(/s$/, ''))
-      tsType = `${innerName}[]`
-      innerTypes.push({ name: innerName, data: value[0] })
-    } else {
-      tsType = inferTSType(value)
-    }
-    lines.push(`  ${key}: ${tsType};`)
-  }
-
-  lines.push('}')
-
-  let result = lines.join('\n')
-  for (const inner of innerTypes) {
-    result += '\n\n' + generateTSInterface(inner.data, inner.name, true)
-  }
-  return result
-}
-
-function generateJSClass(json, name, isInner = false) {
-  const lines = []
-  lines.push(`class ${name} {`)
-  lines.push('  constructor(data) {')
-
-  const entries = Object.entries(json)
-  const innerClasses = []
-
-  for (const [key, value] of entries) {
-    const fieldName = toCamelCase(key)
-    if (value !== null && typeof value === 'object' && !Array.isArray(value)) {
-      const innerName = toPascalCase(key)
-      lines.push(`    this.${fieldName} = new ${innerName}(data.${key} || {});`)
-      innerClasses.push({ name: innerName, data: value })
-    } else if (Array.isArray(value) && value.length > 0 && typeof value[0] === 'object' && value[0] !== null) {
-      const innerName = toPascalCase(key.replace(/s$/, ''))
-      lines.push(`    this.${fieldName} = (data.${key} || []).map(item => new ${innerName}(item));`)
-      innerClasses.push({ name: innerName, data: value[0] })
-    } else {
-      lines.push(`    this.${fieldName} = data.${key} ?? ${JSON.stringify(value)};`)
-    }
-  }
-
-  lines.push('  }')
-  lines.push('}')
-
-  let result = lines.join('\n')
-  for (const inner of innerClasses) {
-    result += '\n\n' + generateJSClass(inner.data, inner.name, true)
-  }
-  return result
-}
-
-function inferPythonType(value) {
-  if (value === null) return 'Optional[Any]'
-  if (typeof value === 'boolean') return 'bool'
-  if (typeof value === 'number') return Number.isInteger(value) ? 'int' : 'float'
-  if (typeof value === 'string') return 'str'
-  if (Array.isArray(value)) {
-    if (value.length === 0) return 'List[Any]'
-    return `List[${inferPythonType(value[0])}]`
-  }
-  return null
-}
-
-function generatePythonClass(json, name, isInner = false) {
-  const lines = []
-  if (!isInner) {
-    lines.push('from dataclasses import dataclass')
-    lines.push('from typing import List, Optional, Any')
-    lines.push('')
-  }
-  lines.push('@dataclass')
-  lines.push(`class ${name}:`)
-
-  const entries = Object.entries(json)
-  const innerClasses = []
-
-  if (entries.length === 0) {
-    lines.push('    pass')
-  }
-
-  for (const [key, value] of entries) {
-    const fieldName = toCamelCase(key)
-    let pyType
-    if (value !== null && typeof value === 'object' && !Array.isArray(value)) {
-      const innerName = toPascalCase(key)
-      pyType = innerName
-      innerClasses.push({ name: innerName, data: value })
-    } else if (Array.isArray(value) && value.length > 0 && typeof value[0] === 'object' && value[0] !== null) {
-      const innerName = toPascalCase(key.replace(/s$/, ''))
-      pyType = `List[${innerName}]`
-      innerClasses.push({ name: innerName, data: value[0] })
-    } else {
-      pyType = inferPythonType(value)
-    }
-    const defaultVal = value === null ? 'None' : (typeof value === 'string' ? '""' : (typeof value === 'boolean' ? (value ? 'True' : 'False') : (Array.isArray(value) ? '[]' : '0')))
-    lines.push(`    ${fieldName}: ${pyType} = ${defaultVal}`)
-  }
-
-  let result = lines.join('\n')
-  for (const inner of innerClasses) {
-    result += '\n\n\n' + generatePythonClass(inner.data, inner.name, true)
-  }
-  return result
-}
-
-function inferGoType(value) {
-  if (value === null) return 'interface{}'
-  if (typeof value === 'boolean') return 'bool'
-  if (typeof value === 'number') return Number.isInteger(value) ? 'int' : 'float64'
-  if (typeof value === 'string') return 'string'
-  if (Array.isArray(value)) {
-    if (value.length === 0) return '[]interface{}'
-    return `[]${inferGoType(value[0])}`
-  }
-  return null
-}
-
-function generateGoStruct(json, name, isInner = false) {
-  const lines = []
-  if (!isInner) {
-    lines.push('package model')
-    lines.push('')
-  }
-  lines.push(`type ${name} struct {`)
-
-  const entries = Object.entries(json)
-  const innerStructs = []
-
-  for (const [key, value] of entries) {
-    const fieldName = toPascalCase(key)
-    let goType
-    if (value !== null && typeof value === 'object' && !Array.isArray(value)) {
-      const innerName = toPascalCase(key)
-      goType = innerName
-      innerStructs.push({ name: innerName, data: value })
-    } else if (Array.isArray(value) && value.length > 0 && typeof value[0] === 'object' && value[0] !== null) {
-      const innerName = toPascalCase(key.replace(/s$/, ''))
-      goType = `[]${innerName}`
-      innerStructs.push({ name: innerName, data: value[0] })
-    } else {
-      goType = inferGoType(value)
-    }
-    lines.push(`    ${fieldName} ${goType} \`json:"${key}"\``)
-  }
-
-  lines.push('}')
-
-  let result = lines.join('\n')
-  for (const inner of innerStructs) {
-    result += '\n\n' + generateGoStruct(inner.data, inner.name, true)
-  }
-  return result
-}
-
-function inferCSharpType(value) {
-  if (value === null) return 'object'
-  if (typeof value === 'boolean') return 'bool'
-  if (typeof value === 'number') return Number.isInteger(value) ? 'int' : 'double'
-  if (typeof value === 'string') return 'string'
-  if (Array.isArray(value)) {
-    if (value.length === 0) return 'List<object>'
-    return `List<${inferCSharpType(value[0])}>`
-  }
-  return null
-}
-
-function generateCSharpClass(json, name, isInner = false) {
-  const lines = []
-  if (!isInner) {
-    lines.push('using System.Collections.Generic;')
-    lines.push('using System.Text.Json.Serialization;')
-    lines.push('')
-    lines.push(`public class ${name}`)
-  } else {
-    lines.push(`public class ${name}`)
-  }
-  lines.push('{')
-
-  const entries = Object.entries(json)
-  const innerClasses = []
-
-  for (const [key, value] of entries) {
-    const fieldName = toPascalCase(key)
-    let csType
-    if (value !== null && typeof value === 'object' && !Array.isArray(value)) {
-      const innerName = toPascalCase(key)
-      csType = innerName
-      innerClasses.push({ name: innerName, data: value })
-    } else if (Array.isArray(value) && value.length > 0 && typeof value[0] === 'object' && value[0] !== null) {
-      const innerName = toPascalCase(key.replace(/s$/, ''))
-      csType = `List<${innerName}>`
-      innerClasses.push({ name: innerName, data: value[0] })
-    } else {
-      csType = inferCSharpType(value)
-    }
-
-    if (fieldName !== key) {
-      lines.push(`    [JsonPropertyName("${key}")]`)
-    }
-    lines.push(`    public ${csType} ${fieldName} { get; set; }`)
-  }
-
-  lines.push('}')
-
-  let result = lines.join('\n')
-  for (const inner of innerClasses) {
-    result += '\n\n' + generateCSharpClass(inner.data, inner.name, true)
-  }
-  return result
-}
-
-function generateCode() {
-  if (!parsedJson.value) {
-    showToast('请先输入并解析 JSON', 'error')
-    return
-  }
-  if (!codeClassName.value.trim()) {
-    showToast('请输入名称', 'error')
-    return
-  }
-  const name = codeClassName.value.trim()
-  const generators = {
-    java: generateJavaClass,
-    typescript: generateTSInterface,
-    javascript: generateJSClass,
-    python: generatePythonClass,
-    go: generateGoStruct,
-    csharp: generateCSharpClass,
-  }
-  generatedCode.value = generators[codeLang.value](parsedJson.value, name)
-  showToast('代码已生成', 'success')
-}
-
-function copyCode() {
-  if (!generatedCode.value) {
-    showToast('请先生成代码', 'error')
-    return
-  }
-  navigator.clipboard.writeText(generatedCode.value).then(() => {
-    showToast('已复制到剪贴板', 'success')
-  }).catch(() => {
-    showToast('复制失败', 'error')
-  })
-}
-
-function exportCode() {
-  if (!generatedCode.value) {
-    showToast('请先生成代码', 'error')
-    return
-  }
-  const blob = new Blob([generatedCode.value], { type: 'text/plain;charset=utf-8' })
-  const url = URL.createObjectURL(blob)
-  const a = document.createElement('a')
-  a.href = url
-  a.download = `${codeClassName.value.trim()}${codeFileExt.value}`
-  a.click()
-  URL.revokeObjectURL(url)
-  showToast('文件已导出', 'success')
-}
-
 provide('expandState', expandState)
 provide('toggleNode', toggleNode)
 </script>
@@ -1097,64 +923,63 @@ provide('toggleNode', toggleNode)
   display: flex;
   flex-direction: column;
   background: var(--bg);
-  transition: background 0.3s ease, color 0.3s ease;
 }
 
 .app-header {
-  display: flex;
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
   align-items: center;
-  justify-content: space-between;
+  gap: 16px;
   padding: 0 24px;
-  height: 60px;
-  background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
-  color: white;
-  box-shadow: 0 2px 16px rgba(0, 0, 0, 0.15);
+  height: 68px;
+  overflow: visible;
+  background: linear-gradient(180deg, #fff 0%, var(--bg) 100%);
+  color: var(--text);
+  flex-shrink: 0;
   z-index: 10;
+}
+
+.app-divider {
   flex-shrink: 0;
 }
 
 [data-theme="dark"] .app-header {
-  background: linear-gradient(135deg, #0d1117 0%, #161b22 50%, #1c2128 100%);
-  box-shadow: 0 2px 16px rgba(0, 0, 0, 0.4);
+  background: linear-gradient(180deg, #3a3630 0%, var(--bg) 100%);
 }
 
 .header-left {
   display: flex;
   align-items: center;
   gap: 16px;
+  justify-self: start;
+  overflow: visible;
 }
 
 .logo {
   display: flex;
   align-items: center;
-  gap: 8px;
-  font-size: 20px;
-  font-weight: 700;
+  overflow: visible;
 }
 
 .logo-icon {
-  background: linear-gradient(135deg, #e94560, #ff6b6b);
-  padding: 2px 8px;
-  border-radius: 6px;
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 16px;
+  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.15));
 }
 
 .logo-text {
-  background: linear-gradient(90deg, #fff, #a8d8ea);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
+  color: inherit;
+  font-weight: 900;
+  letter-spacing: 0.04em;
 }
 
-.header-subtitle {
-  font-size: 13px;
-  opacity: 0.7;
-  letter-spacing: 1px;
+.header-time {
+  flex-shrink: 0;
+  justify-self: center;
 }
 
 .header-right {
   display: flex;
   align-items: center;
+  justify-self: end;
 }
 
 .font-controls {
@@ -1165,147 +990,136 @@ provide('toggleNode', toggleNode)
 
 .control-label {
   font-size: 12px;
-  opacity: 0.8;
-  margin-right: 2px;
+  color: var(--text-secondary);
+  font-weight: 600;
+  letter-spacing: 0.02em;
 }
 
 .btn-icon {
-  background: rgba(255, 255, 255, 0.1);
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  color: white;
-  width: 30px;
-  height: 30px;
-  border-radius: 6px;
+  background: var(--bg-card);
+  border: 2px solid var(--border-strong);
+  color: var(--text-body);
+  width: 32px;
+  height: 32px;
+  border-radius: var(--radius-sm);
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
   font-size: 12px;
-  font-weight: 600;
+  font-weight: 700;
+  box-shadow: var(--shadow);
   transition: var(--transition);
 }
 
 .btn-icon:hover {
-  background: rgba(255, 255, 255, 0.2);
-  transform: scale(1.05);
+  border-color: var(--primary);
+  color: var(--primary);
+  box-shadow: var(--shadow-hover);
+  transform: translateY(-1px);
 }
 
-.theme-toggle {
-  font-size: 16px;
-  width: 32px;
-  height: 32px;
+.btn-icon:active {
+  transform: translateY(1px);
+  box-shadow: var(--shadow);
+}
+
+.theme-switch-wrap {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.search-row {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 1;
+  min-width: 0;
+}
+
+.search-animal-input {
+  width: 152px;
+  flex-shrink: 1;
+  min-width: 108px;
+}
+
+.search-icon {
+  flex-shrink: 0;
+  opacity: 0.85;
 }
 
 .font-size-display {
   font-size: 12px;
   font-family: 'JetBrains Mono', monospace;
+  font-weight: 600;
   min-width: 36px;
   text-align: center;
-  opacity: 0.9;
+  color: var(--text-body);
+}
+
+.nav-icon-up {
+  transform: rotate(-90deg);
+}
+
+.nav-icon-down {
+  transform: rotate(90deg);
+}
+
+.match-counter {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--text-secondary);
+  white-space: nowrap;
+  flex-shrink: 0;
+  min-width: 28px;
+  text-align: center;
 }
 
 .divider {
-  width: 1px;
+  width: 2px;
   height: 20px;
-  background: rgba(255, 255, 255, 0.2);
+  background: var(--border);
   margin: 0 4px;
+  border-radius: 1px;
 }
 
-.color-palette {
-  display: flex;
+.color-radio-group {
+  gap: 6px;
+}
+
+.color-radio-group :deep(.animal-radio-item) {
   gap: 4px;
-  align-items: center;
-}
-
-.color-dot {
-  width: 18px;
-  height: 18px;
-  border-radius: 50%;
-  border: 2px solid transparent;
-  cursor: pointer;
-  transition: var(--transition);
-  position: relative;
-}
-
-.color-dot:hover {
-  transform: scale(1.2);
-  box-shadow: 0 0 8px rgba(255, 255, 255, 0.4);
-}
-
-.color-dot.active {
-  border-color: white;
-  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.3);
 }
 
 .settings-wrapper {
   position: relative;
 }
 
-.drawer-overlay {
-  position: fixed;
-  inset: 0;
-  background: rgba(0, 0, 0, 0.3);
-  z-index: 90;
-  backdrop-filter: blur(2px);
-}
-
-.settings-drawer {
-  position: fixed;
-  top: 0;
-  right: 0;
-  width: 300px;
-  height: 100vh;
-  background: var(--bg-card);
-  box-shadow: -4px 0 24px rgba(0, 0, 0, 0.15);
-  z-index: 95;
-  display: flex;
-  flex-direction: column;
-  transition: background 0.3s ease;
-}
-
-.drawer-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 16px 20px;
-  border-bottom: 1px solid var(--border);
-  flex-shrink: 0;
-}
-
-.drawer-header h3 {
-  font-size: 15px;
-  color: var(--text);
-}
-
-.drawer-body {
-  flex: 1;
-  overflow-y: auto;
-  padding: 16px 20px;
-}
-
 .drawer-section {
-  margin-bottom: 20px;
+  margin-bottom: 24px;
 }
 
 .drawer-section-title {
   font-size: 12px;
-  font-weight: 600;
-  color: var(--text-muted);
+  font-weight: 700;
+  color: var(--text-secondary);
   text-transform: uppercase;
-  letter-spacing: 1px;
+  letter-spacing: 0.08em;
   margin-bottom: 12px;
 }
 
 .drawer-item {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 12px;
   cursor: pointer;
   font-size: 14px;
-  color: var(--text);
-  padding: 10px 12px;
-  border-radius: var(--radius);
-  transition: background 0.2s;
+  font-weight: 500;
+  color: var(--text-body);
+  padding: 12px 14px;
+  border-radius: var(--radius-sm);
+  transition: var(--transition);
   user-select: none;
 }
 
@@ -1314,64 +1128,155 @@ provide('toggleNode', toggleNode)
 }
 
 .drawer-item input[type="checkbox"] {
-  width: 18px;
-  height: 18px;
-  accent-color: var(--primary);
+  appearance: none;
+  width: 22px;
+  height: 22px;
+  background: var(--bg-input);
+  border: 2.5px solid var(--border);
+  border-radius: 8px;
   cursor: pointer;
+  flex-shrink: 0;
+  transition: var(--transition);
+  position: relative;
+}
+
+.drawer-item input[type="checkbox"]:checked {
+  background: var(--primary);
+  border-color: var(--primary-active);
+}
+
+.drawer-item input[type="checkbox"]:checked::after {
+  content: '✓';
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.drawer-item input[type="checkbox"]:focus-visible {
+  outline: 2px solid var(--focus-yellow);
+  outline-offset: 2px;
+}
+
+.drawer-footer-type {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 8px 14px 4px 48px;
+}
+
+.drawer-footer-type-label {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text-body);
   flex-shrink: 0;
 }
 
-.drawer-overlay-enter-active,
-.drawer-overlay-leave-active {
-  transition: opacity 0.3s ease;
+.footer-type-radio {
+  flex: 1;
+  justify-content: flex-end;
 }
 
-.drawer-overlay-enter-from,
-.drawer-overlay-leave-to {
-  opacity: 0;
+.drawer-divider-type {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 10px;
+  padding: 8px 14px 4px 48px;
 }
 
-.drawer-slide-enter-active,
-.drawer-slide-leave-active {
-  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+.drawer-divider-preview {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
 }
 
-.drawer-slide-enter-from,
-.drawer-slide-leave-to {
-  transform: translateX(100%);
+.drawer-divider-sample-wrap {
+  padding: 10px 8px;
+  border-radius: var(--radius-sm);
+  background: var(--bg-card);
+  border: 1px dashed var(--border);
+}
+
+.drawer-divider-sample {
+  width: 100%;
+}
+
+.drawer-divider-row {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 8px;
+}
+
+.drawer-tag-settings {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 4px 14px 8px 48px;
+}
+
+.drawer-tag-preview {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.drawer-tag-row {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 8px;
+}
+
+.drawer-tag-select {
+  width: 100%;
+}
+
+.divider-type-select {
+  width: 100%;
 }
 
 .app-main {
   display: flex;
   flex: 1;
   overflow: hidden;
-  padding: 16px;
+  padding: 10px;
   gap: 0;
+  position: relative;
+  z-index: 1;
 }
 
 .resizer {
-  width: 12px;
+  width: 14px;
   cursor: col-resize;
   display: flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
-  position: relative;
   z-index: 5;
-  margin: 0 4px;
+  margin: 0 2px;
 }
 
 .resizer-bar {
-  width: 4px;
-  height: 40px;
-  border-radius: 2px;
+  width: 6px;
+  height: 48px;
+  border-radius: var(--radius-pill);
   background: var(--border);
-  transition: background 0.2s ease, height 0.2s ease;
+  border: 2px solid var(--border-strong);
+  transition: var(--transition);
 }
 
 .resizer:hover .resizer-bar {
   background: var(--primary);
-  height: 60px;
+  border-color: var(--primary-active);
+  height: 64px;
 }
 
 .left-panel,
@@ -1383,440 +1288,319 @@ provide('toggleNode', toggleNode)
   flex: 1;
   display: flex;
   flex-direction: column;
-  background: var(--bg-card);
-  border-radius: var(--radius-lg);
-  box-shadow: var(--shadow);
+  border-radius: 20px;
   overflow: hidden;
-  transition: background 0.3s ease, box-shadow 0.3s ease;
+  border: 1.5px solid var(--border);
 }
 
-.panel:hover {
-  box-shadow: var(--shadow-hover);
+.left-panel.panel {
+  background: var(--panel-left-pattern);
+  border-color: var(--panel-left-border);
+}
+
+.right-panel.panel {
+  background: var(--panel-right-pattern);
+  border-color: var(--panel-right-border);
 }
 
 .panel-header {
-  display: flex;
+  display: grid;
+  grid-template-columns: max-content 1fr;
   align-items: center;
-  justify-content: space-between;
-  padding: 12px 16px;
-  border-bottom: 1px solid var(--border);
+  padding: 8px 12px;
+  border-bottom: 2px solid var(--border);
   background: var(--bg-header);
   flex-shrink: 0;
-  flex-wrap: wrap;
-  gap: 8px;
-  transition: background 0.3s ease, border-color 0.3s ease;
+  gap: 10px;
+  box-sizing: border-box;
+  backdrop-filter: blur(4px);
 }
 
 .panel-title {
-  font-size: 15px;
-  font-weight: 600;
+  font-size: 13px;
+  font-weight: 700;
   display: flex;
   align-items: center;
   gap: 6px;
   white-space: nowrap;
+  color: var(--text);
+  letter-spacing: 0.02em;
+  flex-shrink: 0;
+  height: 28px;
 }
 
 .panel-icon {
-  font-size: 16px;
+  flex-shrink: 0;
 }
 
 .panel-actions {
   display: flex;
   align-items: center;
-  gap: 6px;
-  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 4px;
+  flex-wrap: nowrap;
+  min-width: 0;
+  height: 28px;
+}
+
+.search-animal-input :deep(.animal-input-wrapper.size-small) {
+  height: 28px;
+  min-height: 28px;
+}
+
+.search-animal-input :deep(.animal-input-wrapper.size-small:not(.no-shadow)) {
+  box-shadow: 0 3px 0 0 var(--shadow-btn, rgba(91, 78, 30, 0.15));
+}
+
+.search-type-select :deep(.animal-select-trigger) {
+  box-sizing: border-box;
+  height: 28px;
+  min-height: 28px;
+  padding: 0 10px;
+  font-size: 12px;
+  border-radius: 10px;
+}
+
+.search-type-select :deep(.animal-select-value) {
+  font-size: 12px;
+  line-height: 1;
 }
 
 .btn {
-  padding: 6px 14px;
-  border: none;
-  border-radius: 6px;
+  padding: 0 12px;
+  height: 28px;
+  border: 2px solid transparent;
+  border-radius: var(--radius-pill);
   font-size: 12px;
-  font-weight: 500;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  line-height: 1;
   cursor: pointer;
   transition: var(--transition);
   white-space: nowrap;
   font-family: inherit;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
 }
 
 .btn:disabled {
   opacity: 0.5;
   cursor: not-allowed;
+  transform: none !important;
+  box-shadow: none !important;
 }
 
 .btn-primary {
-  background: linear-gradient(135deg, #1685a9, #1a9ec2);
-  color: white;
+  background: var(--bg);
+  color: var(--text);
+  border-color: var(--bg);
+  box-shadow: 0 5px 0 0 var(--shadow-btn);
 }
 
 .btn-primary:hover:not(:disabled) {
-  background: linear-gradient(135deg, #126d8a, #1685a9);
+  box-shadow: 0 6px 0 0 var(--shadow-btn);
   transform: translateY(-1px);
+}
+
+.btn-primary:active:not(:disabled) {
+  box-shadow: 0 1px 0 0 var(--shadow-btn);
+  transform: translateY(2px);
 }
 
 .btn-success {
-  background: linear-gradient(135deg, #52c41a, #73d13d);
-  color: white;
+  background: var(--success);
+  color: #fff;
+  border-color: var(--success);
+  box-shadow: 0 4px 0 0 var(--success-active);
 }
 
 .btn-success:hover:not(:disabled) {
-  background: linear-gradient(135deg, #389e0d, #52c41a);
+  box-shadow: 0 5px 0 0 var(--success-active);
   transform: translateY(-1px);
+}
+
+.btn-success:active:not(:disabled) {
+  box-shadow: 0 1px 0 0 var(--success-active);
+  transform: translateY(2px);
 }
 
 .btn-warning {
-  background: linear-gradient(135deg, #faad14, #ffc53d);
-  color: white;
+  background: var(--focus-yellow);
+  color: var(--text-body);
+  border-color: var(--focus-yellow);
+  box-shadow: 0 4px 0 0 var(--focus-yellow-d);
 }
 
 .btn-warning:hover:not(:disabled) {
-  background: linear-gradient(135deg, #d48806, #faad14);
+  box-shadow: 0 5px 0 0 var(--focus-yellow-d);
   transform: translateY(-1px);
+}
+
+.btn-warning:active:not(:disabled) {
+  box-shadow: 0 1px 0 0 var(--focus-yellow-d);
+  transform: translateY(2px);
 }
 
 .btn-danger {
-  background: linear-gradient(135deg, #ff4d4f, #ff7875);
-  color: white;
+  background: var(--error);
+  color: #fff;
+  border-color: var(--error);
+  box-shadow: 0 4px 0 0 var(--error-active);
 }
 
 .btn-danger:hover:not(:disabled) {
-  background: linear-gradient(135deg, #cf1322, #ff4d4f);
+  box-shadow: 0 5px 0 0 var(--error-active);
   transform: translateY(-1px);
 }
 
-.btn-outline {
-  background: transparent;
-  border: 1px solid var(--border);
-  color: var(--text-secondary);
+.btn-danger:active:not(:disabled) {
+  box-shadow: 0 1px 0 0 var(--error-active);
+  transform: translateY(2px);
 }
 
-.btn-outline:hover {
+.btn-outline {
+  background: var(--bg-card);
+  border: 2px solid var(--border-strong);
+  color: var(--text-body);
+  box-shadow: var(--shadow);
+}
+
+.btn-outline:hover:not(:disabled) {
   border-color: var(--primary);
   color: var(--primary);
-  background: var(--btn-outline-hover-bg);
-}
-
-.btn-java {
-  background: linear-gradient(135deg, #ca6924, #e8883a);
-  color: white;
-}
-
-.btn-java:hover:not(:disabled) {
-  background: linear-gradient(135deg, #a85520, #ca6924);
+  box-shadow: var(--shadow-hover);
   transform: translateY(-1px);
 }
 
 .btn-copy {
-  background: linear-gradient(135deg, #7c3aed, #a78bfa);
-  color: white;
+  background: #b77dee;
+  color: #fff;
+  border-color: #b77dee;
+  box-shadow: 0 4px 0 0 #9050d0;
 }
 
 .btn-copy:hover:not(:disabled) {
-  background: linear-gradient(135deg, #6d28d9, #7c3aed);
+  box-shadow: 0 5px 0 0 #9050d0;
   transform: translateY(-1px);
 }
 
 .input-area {
   flex: 1;
   display: flex;
-  overflow: hidden;
+  overflow: visible;
+  position: relative;
+}
+
+.input-wallet {
+  position: absolute;
+  right: 10px;
+  bottom: 6px;
+  z-index: 2;
+  pointer-events: auto;
 }
 
 .json-textarea {
   width: 100%;
   height: 100%;
-  padding: 16px;
+  padding: 10px 108px 52px 12px;
   border: none;
   outline: none;
   resize: none;
   font-family: 'JetBrains Mono', 'Consolas', monospace;
   line-height: 1.6;
-  background: var(--bg-input);
+  background: rgba(255, 255, 255, 0.35);
   color: var(--text);
   white-space: pre;
-  transition: background 0.3s ease;
+  font-weight: 500;
+}
+
+[data-theme="dark"] .json-textarea {
+  background: rgba(0, 0, 0, 0.15);
 }
 
 .json-textarea:focus {
-  background: var(--bg-input-focus);
+  background: rgba(255, 255, 255, 0.55);
+  box-shadow: inset 0 0 0 2px var(--focus-yellow);
 }
 
-.editor-wrapper {
-  position: relative;
-  flex: 1;
-  overflow: hidden;
-  background: var(--bg-input);
-}
-
-.editor-backdrop {
-  position: absolute;
-  inset: 0;
-  padding: 16px;
-  margin: 0;
-  font-family: 'JetBrains Mono', 'Consolas', monospace;
-  line-height: 1.6;
-  background: transparent;
-  color: transparent;
-  white-space: pre;
-  overflow: hidden;
-  pointer-events: none;
-  z-index: 0;
-  box-sizing: border-box;
-}
-
-.backdrop-line {
-  min-height: 1.6em;
-}
-
-.highlight-line {
-  background: rgba(255, 50, 50, 0.18);
-  border-left: 3px solid #e74c3c;
-  animation: highlightFade 2.5s ease forwards;
-}
-
-@keyframes highlightFade {
-  0% { background: rgba(255, 50, 50, 0.35); }
-  60% { background: rgba(255, 50, 50, 0.18); }
-  100% { background: transparent; border-left-color: transparent; }
-}
-
-.json-textarea {
-  position: relative;
-  z-index: 1;
-  width: 100%;
-  height: 100%;
-  padding: 16px;
-  border: none;
-  outline: none;
-  resize: none;
-  font-family: 'JetBrains Mono', 'Consolas', monospace;
-  line-height: 1.6;
-  background: transparent;
-  color: var(--text);
-  white-space: pre;
-}
-
-.editor-backdrop {
-  position: absolute;
-  inset: 0;
-  padding: 16px;
-  margin: 0;
-  font-family: 'JetBrains Mono', 'Consolas', monospace;
-  line-height: 1.6;
-  background: transparent;
-  color: transparent;
-  white-space: pre;
-  overflow: auto;
-  pointer-events: none;
-  z-index: 0;
-  box-sizing: border-box;
-}
-
-.backdrop-line {
-  min-height: 1.6em;
-}
-
-.highlight-line {
-  background: rgba(255, 50, 50, 0.15);
-  border-left: 3px solid #e74c3c;
-  padding-left: 4px;
-  animation: highlightFade 2.5s ease forwards;
-}
-
-@keyframes highlightFade {
-  0% { background: rgba(255, 50, 50, 0.3); }
-  70% { background: rgba(255, 50, 50, 0.15); }
-  100% { background: transparent; border-left-color: transparent; }
-}
-
-.json-textarea {
-  position: relative;
-  z-index: 1;
-  width: 100%;
-  height: 100%;
-  padding: 16px;
-  border: none;
-  outline: none;
-  resize: none;
-  font-family: 'JetBrains Mono', 'Consolas', monospace;
-  line-height: 1.6;
-  background: var(--bg-input);
-  color: var(--text);
-  transition: background 0.3s ease;
-  white-space: pre;
-}
-
-.json-textarea:focus {
-  outline: none;
-}
-
-.editor-wrapper:focus-within {
-  background: var(--bg-input-focus);
-  transition: background 0.3s ease;
+[data-theme="dark"] .json-textarea:focus {
+  background: rgba(0, 0, 0, 0.25);
 }
 
 .json-textarea::placeholder {
   color: var(--text-placeholder);
-  font-family: 'Noto Sans SC', sans-serif;
-}
-
-.panel-footer {
-  padding: 8px 16px;
-  border-top: 1px solid var(--border);
-  flex-shrink: 0;
-}
-
-.validation-msg {
-  font-size: 13px;
-  padding: 6px 12px;
-  border-radius: 6px;
-  animation: slideIn 0.3s ease;
-}
-
-@keyframes slideIn {
-  from { transform: translateY(5px); opacity: 0; }
-  to { transform: translateY(0); opacity: 1; }
-}
-
-.validation-msg.success {
-  background: var(--validation-success-bg);
-  color: var(--validation-success-color);
-  border: 1px solid var(--validation-success-border);
-}
-
-.validation-msg.error {
-  background: var(--validation-error-bg);
-  color: var(--validation-error-color);
-  border: 1px solid var(--validation-error-border);
-}
-
-.validation-msg.warning {
-  background: var(--validation-warning-bg);
-  color: var(--validation-warning-color);
-  border: 1px solid var(--validation-warning-border);
-}
-
-.search-box {
-  display: inline-flex;
-  align-items: center;
-  gap: 2px;
-  border: 1px solid var(--border);
-  border-radius: 6px;
-  padding: 0 4px 0 6px;
-  background: var(--bg-card);
-  transition: border-color 0.2s;
-}
-
-.search-box:focus-within {
-  border-color: var(--primary);
-  box-shadow: 0 0 0 2px rgba(22, 133, 169, 0.15);
-}
-
-.search-icon {
-  font-size: 12px;
-  pointer-events: none;
-  flex-shrink: 0;
-}
-
-.search-input {
-  border: none;
-  outline: none;
-  font-size: 12px;
-  width: 120px;
-  padding: 5px 4px;
-  font-family: inherit;
-  background: transparent;
-  color: var(--text);
-}
-
-.search-input:focus {
-  width: 160px;
-}
-
-.search-input.has-match {
-  width: 100px;
-}
-
-.match-counter {
-  font-size: 11px;
-  color: var(--text-muted);
-  white-space: nowrap;
-  flex-shrink: 0;
-  min-width: 28px;
-  text-align: center;
+  font-family: Nunito, 'Noto Sans SC', sans-serif;
+  font-weight: 400;
 }
 
 .btn-nav {
-  background: transparent;
-  border: 1px solid var(--border);
-  color: var(--text-secondary);
-  width: 20px;
-  height: 20px;
-  border-radius: 3px;
+  background: var(--bg-card);
+  border: 2px solid var(--border);
+  color: var(--text-body);
+  width: 24px;
+  height: 24px;
+  border-radius: 8px;
   cursor: pointer;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  font-size: 9px;
   flex-shrink: 0;
   transition: var(--transition);
+  padding: 0;
 }
 
 .btn-nav:hover {
   border-color: var(--primary);
   color: var(--primary);
-  background: var(--btn-outline-hover-bg);
+  transform: translateY(-1px);
 }
 
 .search-type-select {
-  padding: 6px 8px;
-  border: 1px solid var(--border);
-  border-radius: 6px;
-  font-size: 12px;
-  outline: none;
-  cursor: pointer;
-  background: var(--bg-card);
-  color: var(--text);
-  font-family: inherit;
+  flex-shrink: 0;
 }
 
-.search-type-select:focus {
-  border-color: var(--primary);
+.btn-tree-toggle-wrap {
+  display: inline-flex;
+  flex-shrink: 0;
+}
+
+.btn-tree-toggle {
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  flex-shrink: 0;
+  line-height: 1;
+  transition: transform 0.2s var(--ease);
+}
+
+.btn-tree-toggle:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+.btn-tree-toggle:not(:disabled):hover {
+  transform: scale(1.08);
+}
+
+.btn-tree-toggle:not(:disabled):active {
+  transform: scale(0.96);
+}
+
+.tree-toggle-icon {
+  filter: drop-shadow(0 2px 4px rgba(91, 78, 30, 0.18));
 }
 
 .tree-area {
   flex: 1;
   overflow: auto;
-  padding: 16px;
+  padding: 10px 12px;
 }
 
 .right-panel {
   position: relative;
-}
-
-.btn-back-root {
-  position: absolute;
-  bottom: 16px;
-  right: 16px;
-  background: var(--bg-card);
-  border: 1px solid var(--border);
-  color: var(--text-secondary);
-  padding: 6px 14px;
-  border-radius: 20px;
-  font-size: 12px;
-  font-weight: 500;
-  cursor: pointer;
-  box-shadow: var(--shadow);
-  transition: var(--transition);
-  z-index: 5;
-  font-family: inherit;
-}
-
-.btn-back-root:hover {
-  border-color: var(--primary);
-  color: var(--primary);
-  box-shadow: var(--shadow-hover);
-  transform: translateY(-2px);
 }
 
 .empty-state {
@@ -1829,203 +1613,25 @@ provide('toggleNode', toggleNode)
 }
 
 .empty-icon {
-  font-size: 64px;
-  font-family: 'JetBrains Mono', monospace;
   margin-bottom: 16px;
-  opacity: 0.3;
+  opacity: 0.45;
   animation: pulse 2s infinite;
 }
 
 @keyframes pulse {
-  0%, 100% { transform: scale(1); opacity: 0.3; }
-  50% { transform: scale(1.05); opacity: 0.5; }
+  0%, 100% { transform: scale(1); opacity: 0.35; }
+  50% { transform: scale(1.05); opacity: 0.55; }
 }
 
 .empty-state p {
   font-size: 14px;
+  font-weight: 600;
+  color: var(--text-secondary);
 }
 
 .tree-scroll {
   font-family: 'JetBrains Mono', 'Consolas', monospace;
   line-height: 1.6;
-}
-
-.modal-overlay {
-  position: fixed;
-  inset: 0;
-  background: rgba(0, 0, 0, 0.5);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 100;
-  backdrop-filter: blur(4px);
-}
-
-.modal {
-  background: var(--modal-bg);
-  border-radius: var(--radius-lg);
-  width: 90%;
-  max-width: 800px;
-  max-height: 85vh;
-  display: flex;
-  flex-direction: column;
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
-  animation: modalIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
-  transition: background 0.3s ease;
-}
-
-@keyframes modalIn {
-  from { transform: scale(0.9) translateY(20px); opacity: 0; }
-  to { transform: scale(1) translateY(0); opacity: 1; }
-}
-
-.modal-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 16px 20px;
-  border-bottom: 1px solid var(--border);
-}
-
-.modal-header h3 {
-  font-size: 16px;
-  color: var(--text);
-}
-
-.btn-close {
-  background: none;
-  border: none;
-  font-size: 24px;
-  cursor: pointer;
-  color: var(--text-muted);
-  width: 32px;
-  height: 32px;
-  border-radius: 6px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: var(--transition);
-}
-
-.btn-close:hover {
-  background: var(--btn-close-hover-bg);
-  color: var(--text);
-}
-
-.modal-toolbar {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 12px 20px;
-  border-bottom: 1px solid var(--border);
-  background: var(--modal-toolbar-bg);
-  transition: background 0.3s ease;
-}
-
-.class-name-input {
-  flex: 1;
-  padding: 6px 12px;
-  border: 1px solid var(--border);
-  border-radius: 6px;
-  font-size: 13px;
-  font-family: 'JetBrains Mono', monospace;
-  outline: none;
-  background: var(--bg-card);
-  color: var(--text);
-}
-
-.class-name-input:focus {
-  border-color: var(--primary);
-  box-shadow: 0 0 0 2px rgba(22, 133, 169, 0.15);
-}
-
-.lang-select {
-  padding: 6px 10px;
-  border: 1px solid var(--border);
-  border-radius: 6px;
-  font-size: 13px;
-  font-family: inherit;
-  outline: none;
-  background: var(--bg-card);
-  color: var(--text);
-  cursor: pointer;
-  flex-shrink: 0;
-}
-
-.lang-select:focus {
-  border-color: var(--primary);
-}
-
-.modal-body {
-  flex: 1;
-  overflow: auto;
-  padding: 20px;
-}
-
-.java-code {
-  background: #1e1e2e;
-  color: #cdd6f4;
-  padding: 20px;
-  border-radius: var(--radius);
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 13px;
-  line-height: 1.7;
-  overflow-x: auto;
-  white-space: pre;
-}
-
-.empty-java {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  height: 200px;
-  color: var(--text-placeholder);
-}
-
-.toast {
-  position: fixed;
-  top: 20px;
-  right: 20px;
-  padding: 12px 24px;
-  border-radius: var(--radius);
-  font-size: 14px;
-  font-weight: 500;
-  z-index: 200;
-  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
-  animation: toastIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
-}
-
-@keyframes toastIn {
-  from { transform: translateX(100%) translateY(-10px); opacity: 0; }
-  to { transform: translateX(0) translateY(0); opacity: 1; }
-}
-
-.toast.success {
-  background: var(--toast-success-bg);
-  color: var(--toast-success-color);
-  border: 1px solid var(--toast-success-border);
-}
-
-.toast.error {
-  background: var(--toast-error-bg);
-  color: var(--toast-error-color);
-  border: 1px solid var(--toast-error-border);
-}
-
-.toast.info {
-  background: var(--toast-info-bg);
-  color: var(--toast-info-color);
-  border: 1px solid var(--toast-info-border);
-}
-
-.modal-fade-enter-active,
-.modal-fade-leave-active {
-  transition: opacity 0.3s ease;
-}
-
-.modal-fade-enter-from,
-.modal-fade-leave-to {
-  opacity: 0;
 }
 
 @media (max-width: 900px) {
@@ -2034,34 +1640,45 @@ provide('toggleNode', toggleNode)
     padding: 8px;
     gap: 8px;
   }
-  
+
   .app-header {
+    display: flex;
     flex-direction: column;
     height: auto;
     padding: 12px 16px;
     gap: 8px;
   }
-  
+
+  .header-left,
+  .header-time,
+  .header-right {
+    justify-self: auto;
+    width: 100%;
+  }
+
+  .header-time {
+    display: flex;
+    justify-content: center;
+  }
+
   .header-right {
     width: 100%;
     overflow-x: auto;
   }
-  
-  .search-input {
-    width: 80px;
-  }
-  
-  .search-input:focus {
+
+  .search-animal-input {
     width: 120px;
+    min-width: 96px;
   }
-  
+
   .resizer {
     display: none;
   }
-  
+
   .left-panel,
   .right-panel {
     flex: 1 1 auto !important;
   }
 }
 </style>
+

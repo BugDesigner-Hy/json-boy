@@ -1,131 +1,221 @@
+@import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;500;600;700;800;900&family=Noto+Sans+SC:wght@400;500;700&display=swap');
+
 *, *::before, *::after {
   margin: 0;
   padding: 0;
   box-sizing: border-box;
-  transition-property: background-color, color, border-color, box-shadow, fill, stroke;
-  transition-duration: 0.35s;
-  transition-timing-function: ease;
 }
 
 :root {
-  --primary: #1685a9;
-  --primary-light: #1a9ec2;
-  --primary-dark: #126d8a;
-  --bg: #f0f2f5;
-  --bg-card: #ffffff;
-  --bg-input: #fafbfc;
-  --bg-input-focus: #ffffff;
-  --bg-header: linear-gradient(180deg, #fafbfc 0%, #f5f6f8 100%);
-  --text: #2b2b2b;
-  --text-secondary: #666666;
-  --text-muted: #999999;
-  --text-placeholder: #bbbbbb;
-  --border: #e4e7ed;
-  --shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
-  --shadow-hover: 0 4px 20px rgba(0, 0, 0, 0.12);
-  --radius: 8px;
-  --radius-lg: 12px;
-  --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  --node-key: #8c4356;
-  --node-index: #1685a9;
-  --node-string: #389e0d;
-  --node-number: #177cb0;
-  --node-boolean: #ca6924;
-  --node-null: #bbbbbb;
-  --node-colon: #999999;
-  --node-summary: #999999;
-  --node-badge-bg: rgba(22, 133, 169, 0.1);
-  --node-badge: #1685a9;
-  --node-count: #bbbbbb;
-  --tree-border: #e4e7ed;
-  --match-bg: rgba(250, 173, 20, 0.15);
-  --match-border: #faad14;
-  --match-pulse: rgba(250, 173, 20, 0.3);
-  --hover-bg: rgba(22, 133, 169, 0.06);
-  --modal-bg: #ffffff;
-  --modal-toolbar-bg: #fafbfc;
-  --btn-close-hover-bg: #f5f5f5;
-  --toast-success-bg: #f6ffed;
-  --toast-success-color: #52c41a;
-  --toast-success-border: #b7eb8f;
-  --toast-error-bg: #fff2f0;
-  --toast-error-color: #ff4d4f;
-  --toast-error-border: #ffccc7;
-  --toast-info-bg: #e6f7ff;
-  --toast-info-color: #1890ff;
-  --toast-info-border: #91d5ff;
-  --validation-success-bg: #f6ffed;
-  --validation-success-color: #52c41a;
-  --validation-success-border: #b7eb8f;
-  --validation-error-bg: #fff2f0;
-  --validation-error-color: #ff4d4f;
-  --validation-error-border: #ffccc7;
-  --validation-warning-bg: #fffbe6;
-  --validation-warning-color: #faad14;
-  --validation-warning-border: #ffe58f;
-  --btn-outline-hover-bg: rgba(22, 133, 169, 0.05);
+  /* Animal Island 主色 */
+  --primary: #19c8b9;
+  --primary-hover: #3dd4c6;
+  --primary-active: #11a89b;
+  --primary-light: #3dd4c6;
+  --primary-dark: #11a89b;
+  --primary-bg: #e6f9f6;
+
+  /* 温暖棕色文字 */
+  --text: #794f27;
+  --text-body: #725d42;
+  --text-secondary: #9f927d;
+  --text-muted: #8a7b66;
+  --text-disabled: #c4b89e;
+  --text-placeholder: #c4b89e;
+
+  /* 羊皮纸背景 */
+  --bg: #f8f8f0;
+  --bg-card: rgb(247, 243, 223);
+  --bg-input: rgb(247, 243, 223);
+  --bg-input-focus: rgb(250, 248, 242);
+  --bg-header: rgba(255, 255, 255, 0.55);
+  --bg-disabled: #f0ece2;
+
+  /* 边框 */
+  --border: #c4b89e;
+  --border-hover: #a89878;
+  --border-strong: #9f927d;
+
+  /* 状态色 */
+  --success: #6fba2c;
+  --success-active: #5a9e1e;
+  --warning: #f5c31c;
+  --warning-active: #dba90e;
+  --error: #e05a5a;
+  --error-active: #c94444;
+
+  /* 游戏特殊色 */
+  --focus-yellow: #ffcc00;
+  --focus-yellow-d: #e0b800;
+
+  /* 3D 阴影色 */
+  --shadow-btn: #bdaea0;
+  --shadow-input: #d4c9b4;
+
+  /* 圆角 */
+  --radius: 18px;
+  --radius-sm: 12px;
+  --radius-lg: 24px;
+  --radius-pill: 50px;
+
+  /* 阴影 */
+  --shadow: 0 2px 4px 0 rgba(61, 52, 40, 0.06);
+  --shadow-hover: 0 3px 10px 0 rgba(61, 52, 40, 0.1);
+  --shadow-lg: 0 8px 24px 0 rgba(61, 52, 40, 0.14);
+
+  /* 动效 */
+  --transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  --ease: cubic-bezier(0.4, 0, 0.2, 1);
+
+  /* JSON 树节点色（动森暖色） */
+  --node-key: #794f27;
+  --node-index: #19c8b9;
+  --node-string: #6fba2c;
+  --node-number: #889df0;
+  --node-boolean: #e59266;
+  --node-null: #c4b89e;
+  --node-colon: #9f927d;
+  --node-summary: #9f927d;
+  --node-badge-bg: rgba(25, 200, 185, 0.15);
+  --node-badge: #11a89b;
+  --node-count: #9f927d;
+  --tree-border: #d4c9b4;
+  --match-bg: rgba(255, 204, 0, 0.18);
+  --match-border: #ffcc00;
+  --match-pulse: rgba(255, 204, 0, 0.28);
+  --hover-bg: rgba(25, 200, 185, 0.08);
+
+  /* 弹窗 / 抽屉 */
+  --modal-bg: rgb(247, 243, 223);
+  --modal-toolbar-bg: rgba(255, 255, 255, 0.45);
+  --btn-close-hover-bg: rgba(114, 93, 66, 0.08);
+
+  /* Toast */
+  --toast-success-bg: #e8f5dc;
+  --toast-success-color: #5a9e1e;
+  --toast-success-border: #6fba2c;
+  --toast-error-bg: #fde8e8;
+  --toast-error-color: #c94444;
+  --toast-error-border: #e05a5a;
+  --toast-info-bg: #e6f9f6;
+  --toast-info-color: #11a89b;
+  --toast-info-border: #19c8b9;
+
+  /* 校验消息 */
+  --validation-success-bg: #e8f5dc;
+  --validation-success-color: #5a9e1e;
+  --validation-success-border: #6fba2c;
+  --validation-error-bg: #fde8e8;
+  --validation-error-color: #c94444;
+  --validation-error-border: #e05a5a;
+  --validation-warning-bg: #fff8dc;
+  --validation-warning-color: #8a6010;
+  --validation-warning-border: #f5c31c;
+
+  --btn-outline-hover-bg: rgba(25, 200, 185, 0.08);
+
+  /* 面板波点墙纸 */
+  --panel-left-pattern:
+    radial-gradient(circle, rgba(130, 213, 187, 0.18) 1.5px, transparent 1.5px) 0 0/28px 28px,
+    radial-gradient(circle, rgba(160, 230, 210, 0.12) 1px, transparent 1px) 7px 7px/14px 14px,
+    #e8f8f2;
+  --panel-right-pattern:
+    radial-gradient(circle, rgba(136, 157, 240, 0.18) 1.5px, transparent 1.5px) 0 0/28px 28px,
+    radial-gradient(circle, rgba(170, 190, 250, 0.12) 1px, transparent 1px) 7px 7px/14px 14px,
+    #eef0fc;
+  --panel-left-border: #82d5bb;
+  --panel-right-border: #889df0;
+
+  /* Animal Island 手指光标 — https://guokaigdg.github.io/animal-island-ui/#/cursor */
+  --animal-cursor-finger: url('https://cdn.jsdelivr.net/npm/animal-island-ui@1.4.0/dist/files/cursor-icon.1ea93a65.png') 4 0, auto;
 }
 
 [data-theme="dark"] {
-  --bg: #0d1117;
-  --bg-card: #161b22;
-  --bg-input: #0d1117;
-  --bg-input-focus: #161b22;
-  --bg-header: linear-gradient(180deg, #1c2128 0%, #161b22 100%);
-  --text: #c9d1d9;
-  --text-secondary: #8b949e;
-  --text-muted: #6e7681;
-  --text-placeholder: #484f58;
-  --border: #30363d;
-  --shadow: 0 2px 12px rgba(0, 0, 0, 0.3);
-  --shadow-hover: 0 4px 20px rgba(0, 0, 0, 0.4);
-  --node-key: #d2a8ff;
-  --node-index: #79c0ff;
-  --node-string: #7ee787;
-  --node-number: #79c0ff;
-  --node-boolean: #ffa657;
-  --node-null: #6e7681;
-  --node-colon: #6e7681;
-  --node-summary: #6e7681;
-  --node-badge-bg: rgba(121, 192, 255, 0.1);
-  --node-badge: #79c0ff;
-  --node-count: #6e7681;
-  --tree-border: #30363d;
-  --match-bg: rgba(255, 211, 61, 0.12);
-  --match-border: #ffd33d;
-  --match-pulse: rgba(255, 211, 61, 0.2);
-  --hover-bg: rgba(121, 192, 255, 0.06);
-  --modal-bg: #161b22;
-  --modal-toolbar-bg: #1c2128;
-  --btn-close-hover-bg: #21262d;
-  --toast-success-bg: rgba(126, 231, 135, 0.12);
-  --toast-success-color: #7ee787;
-  --toast-success-border: rgba(126, 231, 135, 0.3);
-  --toast-error-bg: rgba(248, 81, 73, 0.12);
-  --toast-error-color: #ff7b72;
-  --toast-error-border: rgba(248, 81, 73, 0.3);
-  --toast-info-bg: rgba(121, 192, 255, 0.12);
-  --toast-info-color: #79c0ff;
-  --toast-info-border: rgba(121, 192, 255, 0.3);
-  --validation-success-bg: rgba(126, 231, 135, 0.1);
-  --validation-success-color: #7ee787;
-  --validation-success-border: rgba(126, 231, 135, 0.3);
-  --validation-error-bg: rgba(248, 81, 73, 0.1);
-  --validation-error-color: #ff7b72;
-  --validation-error-border: rgba(248, 81, 73, 0.3);
-  --validation-warning-bg: rgba(255, 211, 61, 0.1);
-  --validation-warning-color: #ffd33d;
-  --validation-warning-border: rgba(255, 211, 61, 0.3);
-  --btn-outline-hover-bg: rgba(121, 192, 255, 0.08);
+  --bg: #2a2820;
+  --bg-card: #3a3630;
+  --bg-input: #3a3630;
+  --bg-input-focus: #444038;
+  --bg-header: rgba(50, 46, 40, 0.7);
+  --bg-disabled: #2e2c28;
+
+  --text: #e8dcc8;
+  --text-body: #d4c9b4;
+  --text-secondary: #a89878;
+  --text-muted: #9f927d;
+  --text-disabled: #6a6050;
+  --text-placeholder: #6a6050;
+
+  --border: #5a5248;
+  --border-hover: #7a7060;
+  --border-strong: #8a8070;
+
+  --shadow: 0 2px 4px 0 rgba(0, 0, 0, 0.2);
+  --shadow-hover: 0 3px 10px 0 rgba(0, 0, 0, 0.3);
+  --shadow-lg: 0 8px 24px 0 rgba(0, 0, 0, 0.35);
+
+  --node-key: #f7cd67;
+  --node-index: #3dd4c6;
+  --node-string: #8ac68a;
+  --node-number: #889df0;
+  --node-boolean: #e59266;
+  --node-null: #6a6050;
+  --node-colon: #8a8070;
+  --node-summary: #8a8070;
+  --node-badge-bg: rgba(25, 200, 185, 0.2);
+  --node-badge: #3dd4c6;
+  --node-count: #8a8070;
+  --tree-border: #5a5248;
+  --match-bg: rgba(255, 204, 0, 0.12);
+  --match-border: #f5c31c;
+  --match-pulse: rgba(255, 204, 0, 0.2);
+  --hover-bg: rgba(25, 200, 185, 0.1);
+
+  --modal-bg: #3a3630;
+  --modal-toolbar-bg: rgba(50, 46, 40, 0.6);
+  --btn-close-hover-bg: rgba(255, 255, 255, 0.06);
+
+  --toast-success-bg: rgba(111, 186, 44, 0.15);
+  --toast-success-color: #8ac68a;
+  --toast-success-border: rgba(111, 186, 44, 0.4);
+  --toast-error-bg: rgba(224, 90, 90, 0.15);
+  --toast-error-color: #fc736d;
+  --toast-error-border: rgba(224, 90, 90, 0.4);
+  --toast-info-bg: rgba(25, 200, 185, 0.12);
+  --toast-info-color: #3dd4c6;
+  --toast-info-border: rgba(25, 200, 185, 0.4);
+
+  --validation-success-bg: rgba(111, 186, 44, 0.12);
+  --validation-success-color: #8ac68a;
+  --validation-success-border: rgba(111, 186, 44, 0.3);
+  --validation-error-bg: rgba(224, 90, 90, 0.12);
+  --validation-error-color: #fc736d;
+  --validation-error-border: rgba(224, 90, 90, 0.3);
+  --validation-warning-bg: rgba(245, 195, 28, 0.12);
+  --validation-warning-color: #f5c31c;
+  --validation-warning-border: rgba(245, 195, 28, 0.3);
+
+  --btn-outline-hover-bg: rgba(25, 200, 185, 0.12);
+
+  --panel-left-pattern:
+    radial-gradient(circle, rgba(130, 213, 187, 0.1) 1.5px, transparent 1.5px) 0 0/28px 28px,
+    radial-gradient(circle, rgba(130, 213, 187, 0.06) 1px, transparent 1px) 7px 7px/14px 14px,
+    #2e3834;
+  --panel-right-pattern:
+    radial-gradient(circle, rgba(136, 157, 240, 0.1) 1.5px, transparent 1.5px) 0 0/28px 28px,
+    radial-gradient(circle, rgba(136, 157, 240, 0.06) 1px, transparent 1px) 7px 7px/14px 14px,
+    #2e3038;
+  --panel-left-border: #40a880;
+  --panel-right-border: #5068d8;
 }
 
 html, body {
   height: 100%;
-  font-family: 'Noto Sans SC', -apple-system, BlinkMacSystemFont, sans-serif;
+  font-family: Nunito, 'Noto Sans SC', -apple-system, 'PingFang SC', sans-serif;
+  font-weight: 500;
+  letter-spacing: 0.01em;
   background: var(--bg);
-  color: var(--text);
+  color: var(--text-body);
   overflow: hidden;
-  transition: background-color 0.5s ease, color 0.3s ease;
 }
 
 #app {
@@ -135,8 +225,8 @@ html, body {
 }
 
 ::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
+  width: 8px;
+  height: 8px;
 }
 
 ::-webkit-scrollbar-track {
@@ -144,20 +234,12 @@ html, body {
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #c1c1c1;
-  border-radius: 3px;
-}
-
-[data-theme="dark"] ::-webkit-scrollbar-thumb {
-  background: #30363d;
+  background: var(--border);
+  border-radius: var(--radius-pill);
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #a8a8a8;
-}
-
-[data-theme="dark"] ::-webkit-scrollbar-thumb:hover {
-  background: #484f58;
+  background: var(--border-hover);
 }
 
 .fade-enter-active,
@@ -168,4 +250,24 @@ html, body {
 .fade-enter-from,
 .fade-leave-to {
   opacity: 0;
+}
+
+/* Animal Island Cursor 包裹器 — 全区域游戏手指指针 */
+.animal-cursor,
+.animal-cursor * {
+  cursor: var(--animal-cursor-finger) !important;
+}
+
+body.animal-cursor-resizing,
+body.animal-cursor-resizing * {
+  cursor: col-resize !important;
+}
+
+.animal-cursor .btn:disabled,
+.animal-cursor .btn:disabled *,
+.animal-cursor .btn-icon:disabled,
+.animal-cursor input:disabled,
+.animal-cursor textarea:disabled,
+.animal-cursor select:disabled {
+  cursor: not-allowed !important;
 }
