@@ -44,6 +44,15 @@
             />
           </label>
           <div class="divider"></div>
+          <button
+            class="btn-icon"
+            :class="{ 'is-muted': !bgmEnabled }"
+            :title="bgmEnabled ? '关闭背景音乐' : '开启背景音乐'"
+            :aria-label="bgmEnabled ? '关闭背景音乐' : '开启背景音乐'"
+            @click.stop="toggleBgm"
+          >
+            <AnimalIcon :src="soundIcon" :size="24" bounce label="背景音乐" />
+          </button>
           <div class="settings-wrapper">
             <button class="btn-icon" @click.stop="showSettings = !showSettings" title="设置">
               <AnimalIcon :src="settingsIcon" :size="24" bounce label="设置" />
@@ -327,6 +336,7 @@ import AnimalTooltip from './components/AnimalTooltip.vue'
 import AnimalTitle from './components/AnimalTitle.vue'
 import HomeBearLogo from './components/HomeBearLogo.vue'
 import { animalNotification } from './composables/animalNotification.js'
+import { useBgm } from './composables/useBgm.js'
 import { itemIconUrl, DIVIDER_TYPE_OPTIONS, ANIMAL_HOME_BEAR_LOGO } from './assets/animal-icons.js'
 import { TAG_VARIANT_OPTIONS, TAG_COLOR_OPTIONS } from './assets/tag-options.js'
 import { TITLE_COLOR_KEYS, LOGO_ICON_START, LOGO_ICON_COUNT } from './assets/title-options.js'
@@ -335,9 +345,11 @@ const expandToggleIcon = itemIconUrl(1)
 const jsonInputIcon = itemIconUrl(23)
 const jsonStructureIcon = itemIconUrl(473)
 const settingsIcon = itemIconUrl(469)
+const soundIcon = itemIconUrl(484)
 const homeBearLogoUrl = ANIMAL_HOME_BEAR_LOGO
 const SHOW_HOME_BEAR_KEY = 'json-boy-show-home-bear'
 const LOGO_THEME_STORAGE_KEY = 'json-boy-title-theme'
+const { bgmEnabled, toggleBgm } = useBgm()
 
 function getInitialShowHomeBear() {
   try {
@@ -1022,6 +1034,11 @@ provide('toggleNode', toggleNode)
 .btn-icon:active {
   transform: translateY(1px);
   box-shadow: var(--shadow);
+}
+
+.btn-icon.is-muted {
+  opacity: 0.45;
+  filter: grayscale(0.35);
 }
 
 .theme-switch-wrap {
