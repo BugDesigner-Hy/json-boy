@@ -72,6 +72,9 @@
             JSON 输入
           </h2>
           <div class="panel-actions">
+            <button class="btn btn-sample" @click="loadSample" title="载入一段复杂的示例 JSON">
+              示例
+            </button>
             <button class="btn btn-copy" @click="copyInput" :disabled="!jsonInput.trim()">
               复制
             </button>
@@ -339,6 +342,7 @@ import { animalNotification } from './composables/animalNotification.js'
 import { useBgm } from './composables/useBgm.js'
 import { itemIconUrl, DIVIDER_TYPE_OPTIONS } from './assets/animal-icons.js'
 import { ANIMAL_HOME_BEAR_LOGO } from './assets/app-assets.js'
+import { SAMPLE_JSON } from './assets/sample-json.js'
 import { TAG_VARIANT_OPTIONS, TAG_COLOR_OPTIONS } from './assets/tag-options.js'
 import { TITLE_COLOR_KEYS, LOGO_ICON_START, LOGO_ICON_COUNT } from './assets/title-options.js'
 
@@ -703,6 +707,19 @@ function clearInput() {
   prevJsonSnapshot = null
   clearExpandState()
   resetSearch()
+}
+
+function loadSample() {
+  jsonInput.value = JSON.stringify(SAMPLE_JSON, null, 2)
+  parseJson()
+  resetSearch()
+  clearExpandState()
+  expandAll()
+  prevJsonSnapshot = parsedJson.value ? JSON.parse(JSON.stringify(parsedJson.value)) : null
+  nextTick(() => {
+    if (textareaRef.value) textareaRef.value.scrollTop = 0
+  })
+  showToast('已载入示例 JSON', 'success')
 }
 
 function copyInput() {
@@ -1361,6 +1378,14 @@ provide('toggleNode', toggleNode)
   height: 28px;
 }
 
+/* 左侧按钮较多，面板被拖窄时换行而不是溢出 */
+.left-panel .panel-actions {
+  flex-wrap: wrap;
+  row-gap: 4px;
+  height: auto;
+  min-height: 28px;
+}
+
 .search-animal-input :deep(.animal-input-wrapper.size-small) {
   height: 28px;
   min-height: 28px;
@@ -1490,6 +1515,23 @@ provide('toggleNode', toggleNode)
   color: var(--primary);
   box-shadow: var(--shadow-hover);
   transform: translateY(-1px);
+}
+
+.btn-sample {
+  background: var(--primary);
+  color: #fff;
+  border-color: var(--primary);
+  box-shadow: 0 4px 0 0 var(--primary-active);
+}
+
+.btn-sample:hover:not(:disabled) {
+  box-shadow: 0 5px 0 0 var(--primary-active);
+  transform: translateY(-1px);
+}
+
+.btn-sample:active:not(:disabled) {
+  box-shadow: 0 1px 0 0 var(--primary-active);
+  transform: translateY(2px);
 }
 
 .btn-copy {

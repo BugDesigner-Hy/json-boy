@@ -1,0 +1,135 @@
+// 「示例」按钮载入的演示数据。
+// 刻意覆盖：多层嵌套对象、对象数组、二维数组、空对象/空数组，
+// 以及 string / number（整数、小数、负数）/ boolean / null 各种类型，
+// 便于体验树形视图的折叠、类型标签、搜索命中与层级彩色虚线。
+export const SAMPLE_JSON = {
+  island: {
+    name: '无悠岛',
+    dreamAddress: 'DA-1234-5678-9012',
+    hemisphere: 'north',
+    rating: 5,
+    stars: 4.9,
+    isOpen: true,
+    visitorsToday: null,
+    slogan: '钓鱼佬的快乐 "永不空军" 🎣',
+    weather: {
+      type: '晴天',
+      temperature: 22.5,
+      windLevel: 2,
+      temperatureChange: -2.5,
+      forecast: ['晴', '多云', '小雨', '雷阵雨'],
+    },
+    terrain: {
+      rivers: 3,
+      cliffs: { north: 2, east: 1, south: 0, west: 1 },
+      beachLength: 1280.75,
+      features: [],
+    },
+  },
+  residentRepresentative: {
+    name: '小桃',
+    species: '兔子',
+    birthday: '05-18',
+    catchphrase: '桃桃',
+    friendship: {
+      level: 100,
+      points: 2450,
+      isBestFriend: true,
+      lastGift: { item: '桃花', quality: '普通', price: 80 },
+    },
+    house: {
+      style: '森系',
+      rooms: 6,
+      furnitureCount: 142,
+      wallpaper: '木质墙',
+      extension: null,
+    },
+    skills: ['园艺', '钓鱼', '捉虫'],
+    notes: '岛上最早搬来的居民，喜欢在花田里发呆，也喜欢收集雨伞。',
+  },
+  residents: [
+    {
+      id: 'R-001',
+      name: '小桃',
+      species: '兔子',
+      personality: '元气',
+      houseLevel: 3,
+      isMoving: false,
+      bells: 12000,
+      gifts: ['桃子', '蓝色雨伞'],
+    },
+    {
+      id: 'R-002',
+      name: '阿獭',
+      species: '海獭',
+      personality: '运动',
+      houseLevel: 5,
+      isMoving: true,
+      bells: 45800,
+      gifts: ['贝壳', '潜水镜', '螃蟹'],
+    },
+    {
+      id: 'R-003',
+      name: '莉莉安',
+      species: '兔子',
+      personality: '大姐姐',
+      houseLevel: 4,
+      isMoving: false,
+      bells: 9700,
+      gifts: [],
+    },
+  ],
+  museum: {
+    curator: '傅达',
+    openingHours: { open: '09:00', close: '22:00', closedOn: null },
+    donations: {
+      fish: { donated: 42, total: 80, complete: false },
+      bugs: { donated: 38, total: 80, complete: false },
+      fossils: { donated: 73, total: 73, complete: true },
+      art: { donated: 4, total: 43, complete: false, forgeries: 2 },
+    },
+  },
+  shop: {
+    name: 'Nook 商店',
+    upgradeLevel: 3,
+    turnipPrice: 97,
+    inventory: [
+      { item: '捕虫网', price: 500, stock: 12, tags: ['工具'] },
+      { item: '浇花壶', price: 800, stock: 6, tags: ['工具', '园艺'] },
+      { item: '桃树苗', price: 240, stock: 30, tags: ['植物'] },
+      { item: '雨伞 · 格子', price: 1600, stock: 0, tags: ['服饰', '季节'] },
+    ],
+  },
+  events: [
+    {
+      month: 4,
+      name: '樱花季',
+      active: false,
+      rewards: ['樱花花瓣', '樱花树枝', '樱花盆栽'],
+    },
+    {
+      month: 8,
+      name: '烟花大会',
+      active: true,
+      rewards: [],
+      schedule: [
+        ['19:00', '20:00'],
+        ['21:00', '22:00'],
+      ],
+    },
+  ],
+  statistics: {
+    playTimeHours: 386.5,
+    totalBells: 1849200,
+    dailyLogin: [1, 0, 1, 1, 0, 1, 1],
+    ratios: { flowerGarden: 0.32, orchard: 0.18, plaza: 0.12 },
+  },
+  meta: {
+    version: '1.1.0',
+    schema: 'island-archive/v2',
+    exportedAt: '2026-10-19T09:30:00+08:00',
+    checksum: null,
+    emptyNode: {},
+    emptyList: [],
+  },
+}
