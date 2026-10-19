@@ -8,6 +8,7 @@
 [![Vite](https://img.shields.io/badge/Vite-8-646cff?logo=vite&logoColor=white)](https://vite.dev/)
 [![Chrome](https://img.shields.io/badge/Chrome-MV3-4285f4?logo=googlechrome&logoColor=white)](https://developer.chrome.com/docs/extensions/)
 [![Version](https://img.shields.io/badge/version-1.1.0-brown)](package.json)
+[![License](https://img.shields.io/badge/license-MIT-green)](LICENSE)
 
 </div>
 
@@ -190,6 +191,7 @@ json-boy/
 ├─ index.html
 ├─ vite.config.js               # 开发服务器 0.0.0.0:5173
 ├─ test-data.json               # 用于测试的多层嵌套 JSON 样例
+├─ LICENSE                      # MIT 许可证
 ├─ dist.crx / dist.pem          # 历史构建产物（建议自行构建）
 └─ package.json
 ```
@@ -219,4 +221,8 @@ json-boy/
 
 ## License
 
-本仓库暂未附带许可证文件，如需开源授权请自行补充 `LICENSE`。
+本项目基于 [MIT License](LICENSE) 开源，Copyright (c) 2026 BugDesigner-Hy。
+
+你可以自由使用、修改、分发本项目，包括商业用途，只需保留原始的版权与许可声明。
+
+> 说明：`.vue` 组件与源码采用上述许可；`public/audio/bgm.mp3`、`public/img/home-bear-logo.png` 等第三方素材的版权归原作者所有，仅用于学习与演示，如涉及侵权请联系删除。
