@@ -1,7 +1,7 @@
 import { ref, watch, onMounted, onUnmounted } from 'vue'
 
 const BGM_ENABLED_KEY = 'json-boy-bgm-enabled'
-const BGM_SRC = '/audio/bgm.mp3'
+const BGM_SRC = `${import.meta.env.BASE_URL}audio/bgm.mp3`
 const BGM_VOLUME = 0.35
 
 function readEnabled() {

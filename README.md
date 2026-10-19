@@ -9,6 +9,7 @@
 [![Chrome](https://img.shields.io/badge/Chrome-MV3-4285f4?logo=googlechrome&logoColor=white)](https://developer.chrome.com/docs/extensions/)
 [![Version](https://img.shields.io/badge/version-1.1.0-brown)](package.json)
 [![License](https://img.shields.io/badge/license-MIT-green)](LICENSE)
+[![Live Demo](https://img.shields.io/badge/demo-GitHub%20Pages-2ea44f?logo=github&logoColor=white)](https://bugdesigner-hy.github.io/json-boy/)
 
 </div>
 
@@ -17,6 +18,10 @@
 JSON Boy 把枯燥的 JSON 调试变成了一件可爱的事：左侧粘贴 JSON，右侧即时渲染成可折叠的树形视图，配色、分割线、页脚、图标全部采用「动物森友会」风格。
 
 项目基于 **Vue 3 + Vite** 开发，同时附带 **Chrome Manifest V3** 扩展清单——点击浏览器工具栏图标即可在独立标签页中打开完整功能，不占用地址栏，也不会被网页刷新影响。
+
+> 🌐 **在线预览**：<https://bugdesigner-hy.github.io/json-boy/>
+>
+> 无需安装，打开即用（首次加载会从 CDN 拉取字体与图标素材）。
 
 ## 功能特性
 
@@ -105,6 +110,16 @@ npm run preview
 
 > `npm run build` 会先执行 `scripts/generate-icons.mjs`，从 CDN 拉取源图标后用 `sharp` 生成 `public/icons/` 下的三种尺寸，因此**构建过程需要网络**。
 
+默认以根路径（`/`）构建，产物可直接作为 Chrome 扩展加载。若要部署到 `https://<user>.github.io/json-boy/` 这类**子路径**，需要设置 `PAGES_BASE`：
+
+```bash
+# macOS / Linux
+PAGES_BASE=/json-boy/ npm run build
+
+# Windows PowerShell
+$env:PAGES_BASE='/json-boy/'; npm run build
+```
+
 ### 安装为 Chrome 扩展
 
 1. 执行 `npm run build`，确认 `dist/` 目录中已包含 `manifest.json`、`background.js`、`index.html` 与 `assets/`。
@@ -192,6 +207,7 @@ json-boy/
 ├─ vite.config.js               # 开发服务器 0.0.0.0:5173
 ├─ test-data.json               # 用于测试的多层嵌套 JSON 样例
 ├─ LICENSE                      # MIT 许可证
+├─ .github/workflows/deploy.yml # 推送 main 自动部署到 GitHub Pages
 ├─ dist.crx / dist.pem          # 历史构建产物（建议自行构建）
 └─ package.json
 ```
@@ -204,6 +220,34 @@ json-boy/
 | `npm run build` | 生成扩展图标并打包到 `dist/` |
 | `npm run build:ext` | 与 `build` 等价，语义化别名 |
 | `npm run preview` | 本地预览构建产物 |
+
+> 子路径部署用 `PAGES_BASE=/json-boy/ npm run build`，详见 [部署](#部署)。
+
+## 部署
+
+### GitHub Pages（已配置，自动部署）
+
+仓库内置工作流 [`.github/workflows/deploy.yml`](.github/workflows/deploy.yml)：推送到 `main` 后自动安装依赖、以 `PAGES_BASE=/json-boy/` 构建并发布。
+
+- **预览地址**：<https://bugdesigner-hy.github.io/json-boy/>
+- **触发方式**：push 到 `main`，或在 Actions 页面手动 `Run workflow`
+- **首次配置**：Settings → Pages → Source 选择 **GitHub Actions**
+
+工作流关键步骤：
+
+| 步骤 | 作用 |
+| --- | --- |
+| `npm ci` | 按 lockfile 安装依赖 |
+| `npm run build`（`PAGES_BASE=/json-boy/`） | 以子路径为基础打包到 `dist/` |
+| `actions/configure-pages` | 读取 Pages 配置 |
+| `actions/upload-pages-artifact` | 上传 `dist/` 作为站点产物 |
+| `actions/deploy-pages` | 发布到 Pages 环境 |
+
+> 之所以需要 `PAGES_BASE`：项目页地址是 `https://<user>.github.io/json-boy/`，资源必须带 `/json-boy/` 前缀，否则 JS/CSS、`img/`、`audio/` 都会 404。代码中所有运行时资源已统一走 `import.meta.env.BASE_URL`。
+
+### 其他托管（Vercel / Netlify）
+
+根路径托管无需设置 `PAGES_BASE`，直接 `npm run build`，把 `dist` 作为发布目录即可（构建命令 `npm run build`，输出目录 `dist`）。
 
 ## 注意事项
 

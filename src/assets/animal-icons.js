@@ -2,7 +2,8 @@ const CDN_BASE = 'https://cdn.jsdelivr.net/npm/animal-island-ui@1.4.0/dist/files
 const ITEM_CDN = 'https://cdn.jsdelivr.net/npm/animal-island-ui@1.4.0/dist/items'
 const FOOTER_CDN = 'https://cdn.jsdelivr.net/gh/guokaigdg/animal-island-ui@1.4.0/src/assets/img/footer'
 
-export const ANIMAL_HOME_BEAR_LOGO = '/img/home-bear-logo.png'
+// 用 BASE_URL 拼接，保证子路径部署（如 GitHub Pages）时也能正确加载
+export const ANIMAL_HOME_BEAR_LOGO = `${import.meta.env.BASE_URL}img/home-bear-logo.png`
 
 export const ANIMAL_FOOTER_SEA = `${FOOTER_CDN}/footer-sea.svg`
 export const ANIMAL_FOOTER_TREE = `${FOOTER_CDN}/footer-tree.webp`
